@@ -1,16 +1,18 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
+
 package week2;
 
-/**
- *
- * @author USER
- */
+import java.util.Scanner;
+
 public class L2Q1 {
     public static void main(String[] args){
-        System.out.println("Hello world");
-    }
+        
+    Scanner scanner = new Scanner(System.in);
+    Double Fahrenheit;
+        System.out.println("Enter the temperature in degree Fahrenheit");
+        Fahrenheit=scanner.nextDouble();
+        Double Celsius = (Fahrenheit-32)/1.8;
+        System.out.printf("Temperature : %.2f Celsius",Celsius);
+    };
+    
     
 }
