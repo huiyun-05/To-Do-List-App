@@ -1,12 +1,12 @@
 
 package week3;
 
-import java.util.Random;
 
 public class L3Q2 {
     public static void main (String[] args){
-        Random random = new Random();
-        int num = random.nextInt(6);
+        
+        int num = (int)(Math.random()*6);
+        
         switch(num){
             case 0 :
                 System.out.println(num+" is zero.");
@@ -26,6 +26,8 @@ public class L3Q2 {
             case 5 :
                 System.out.println(num+" is five.");
                 break;
+            default:
+                System.out.println("Error");
         }
     
     }

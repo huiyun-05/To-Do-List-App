@@ -4,29 +4,39 @@ import java.util.Scanner;
 public class L3Q1 {
     public static void main(String[] args){
     Scanner scanner = new Scanner(System.in);
-        System.out.println("Enter first integer number");
+        System.out.print("Enter first integer number: ");
         int num1=scanner.nextInt();
-        System.out.println("Enter second integer number");
+        System.out.print("Enter second integer number: ");
         int num2=scanner.nextInt();
-        System.out.println("Enter the operand");
+        System.out.print("Enter the operand (+, -, /, *,%): ");
         char operator = scanner.next().charAt(0);
-        switch(operator){
-        case '+' :
-            System.out.println("Sum:"+num1+num2);
-            break;
-        case '-':
-            System.out.println("Difference:"+(num1-num2));
-            break;
-        case '*':
-            System.out.println("Multiplication:"+(num1*num2)); 
-            break;
-        case '/':
-            System.out.println("Quotient:"+(num1/num2));
-            break;
-        case '%':
-            System.out.println("Remainder:"+(num1%num2));
-            break;
-    }
         
+        if(operator=='+'){
+           System.out.println(num1+"+"+num2+"="+num1+num2); 
+        }
+        if(operator=='-'){
+           System.out.println(num1+"-"+num2+"="+(num1-num2)); 
+        }
+        if(operator=='*'){
+           System.out.println(num1+"*"+num2+"="+(num1*num2)); 
+        }
+        if(operator=='/'){
+            if(num2!=0){
+                System.out.println(num1+"/"+num2+"="+(num1/num2));
+            }
+            else{
+                System.out.println("Error: division by zero");
+            }
+        }
+        if(operator=='%'){
+            if(num2!=0){
+                System.out.println(num1+"%"+num2+"="+(num1%num2));
+            }
+            else{
+                System.out.println("Error: division by zero");
+            }
+        }
+        scanner.close(); 
     }
+         
 }

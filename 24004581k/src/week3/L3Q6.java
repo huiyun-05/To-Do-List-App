@@ -7,16 +7,19 @@ public class L3Q6 {
     Scanner scanner= new Scanner(System.in);
         System.out.println("Enter the radius of a circle");
         double radius=scanner.nextDouble();
-        System.out.println("Enter a coordinate point(x)");
+        System.out.println("Enter a coordinate point x and y");
         double x=scanner.nextDouble();
-        System.out.println("Enter a coordinate point(y)");
         double y=scanner.nextDouble();
+        
         double z = Math.sqrt((x*x)+(y*y));
-        if(z<=radius){
-            System.out.println("The is inside the circle centered at(0,0)");
+        if(z<radius){
+            System.out.printf("The point (%.2f, %.2f) is inside the circle\n", x, y);
+        }
+        else if(z>radius){
+            System.out.printf("The point (%.2f,%.2f) is outside the circle\n",x,y);
         }
         else{
-            System.out.println("The point is outside the circle centered at(0,0)");
+            System.out.printf("The point (%.2f, %.2f) is on the circle's circumference\n", x, y);
       
     }
             
