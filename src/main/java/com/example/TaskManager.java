@@ -140,6 +140,7 @@ public class TaskManager {
                 System.out.println("Invalid option.");
         }
     }
+    
     private static void searchTasks() {
         System.out.println("=== Search Tasks ===");
         System.out.print("Enter a keyword to search by title or description: ");
@@ -154,8 +155,7 @@ public class TaskManager {
                
                 System.out.println((i + 1) + ". " + task);
                 found = true;
-            }
-            
+            } 
         }
         if (!found) {
             System.out.println("No tasks found with the keyword: " + keyword);

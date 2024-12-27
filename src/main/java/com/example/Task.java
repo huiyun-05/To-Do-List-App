@@ -1,6 +1,5 @@
 package com.example;
 
-
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,7 +31,6 @@ public class Task {
         this.isComplete = false;
         this.nextCreationDate = now; // Initialize to the current date
     }
-
     
     public String getTitle() {
         return title;
