@@ -1,22 +1,39 @@
 package com.example;
 
-public class Task {
-    private String title;
-    private String description;
-    private String dueDate;
-    private String category;
-    private String priority;
 
-    // Constructor that matches the parameters passed from addTask()
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+
+public class Task {
+    String title;
+    String description;
+    String dueDate;
+    boolean isComplete;
+    String category;
+    String priority;
+    String recurrence; // daily, weekly, monthly
+    LocalDate nextCreationDate;
+    List<Integer> dependencies = new ArrayList<>();
+
     public Task(String title, String description, String dueDate, String category, String priority) {
         this.title = title;
         this.description = description;
         this.dueDate = dueDate;
+        this.isComplete = false;
         this.category = category;
         this.priority = priority;
     }
+    
+    public Task(String title, String description, String recurrence, LocalDate now) {
+        this.title = title;
+        this.description = description;
+        this.recurrence = recurrence;
+        this.isComplete = false;
+        this.nextCreationDate = now; // Initialize to the current date
+    }
 
-    // Getters and setters for each field (if needed)
+    
     public String getTitle() {
         return title;
     }
@@ -41,6 +58,14 @@ public class Task {
         this.dueDate = dueDate;
     }
 
+    public boolean isIsComplete() {
+        return isComplete;
+    }
+
+    public void setIsComplete(boolean isComplete) {
+        this.isComplete = isComplete;
+    }
+
     public String getCategory() {
         return category;
     }
@@ -57,14 +82,54 @@ public class Task {
         this.priority = priority;
     }
 
-    @Override
+    public List<Integer> getDependencies() {
+        return dependencies;
+    }
+
+    public void setDependencies(List<Integer> dependencies) {
+        this.dependencies = dependencies;
+    }
+    
+    public void setRecurrence(String recurrence) {
+        this.recurrence = recurrence;
+    }
+    
+    public boolean isRecurring() {
+        return recurrence != null && !recurrence.isEmpty();
+    }
+    
+    public void updateNextCreationDate() {
+        if (nextCreationDate == null) {
+            nextCreationDate = LocalDate.now(); // Initialize if null
+        }
+        switch (recurrence.toLowerCase()) {
+            case "daily":
+                nextCreationDate = nextCreationDate.plusDays(1);
+                break;
+            case "weekly":
+                nextCreationDate = nextCreationDate.plusWeeks(1);
+                break;
+            case "monthly":
+                nextCreationDate = nextCreationDate.plusMonths(1);
+                break;
+            default:
+                System.out.println("Invalid recurrence type.");
+        }
+    }
+
+    public void addDependency(int taskId) {
+        dependencies.add(taskId);
+    }
+
+    public void markComplete() {
+        isComplete = true;
+    }
+
+    public void markIncomplete() {
+        isComplete = false;
+    }
+
     public String toString() {
-        return "Task{" +
-                "title='" + title + '\'' +
-                ", description='" + description + '\'' +
-                ", dueDate='" + dueDate + '\'' +
-                ", category='" + category + '\'' +
-                ", priority='" + priority + '\'' +
-                '}';
+        return (isComplete ? "[Complete] " : "[Incomplete] ") + title + " - Due: " + dueDate + " - Category: " + category + " - Priority: " + priority;
     }
 }
