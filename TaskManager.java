@@ -94,7 +94,7 @@ public class TaskManager {
                 case 9:
                     viewAllTasks();
                     break;
-                case 0:
+                case 10:
                     System.out.println("Exiting...");
                     return;
                 default:
