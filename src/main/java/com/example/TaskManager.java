@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.stream.Collectors;
 
 public class TaskManager {
     static List<Task> tasks = new ArrayList<>();
@@ -87,14 +88,25 @@ public class TaskManager {
     private static void markTaskComplete() {
         System.out.print("Enter the task number you want to mark as complete:");
         int taskId = scanner.nextInt();
+        System.out.println();
+        
         if (taskId >= 1 && taskId <= tasks.size()) {
             Task task = tasks.get(taskId - 1);
-            if (task.dependencies.isEmpty() || task.dependencies.stream().allMatch(dep -> tasks.get(dep - 1).isComplete)) {
+            boolean canMarkComplete = true;
+         
+            for (Integer dep : task.dependencies) {
+                if (!tasks.get(dep - 1).isComplete) {
+                    System.out.println("Warning: Task \"" + task.title + "\" cannot be marked as complete because it depends on \"" 
+                            + tasks.get(dep - 1).getTitle() + "\". Please complete \"" 
+                            + tasks.get(dep - 1).getTitle() + "\" first.");
+                    canMarkComplete = false;
+                    break;
+                }
+            }
+
+            if (canMarkComplete) {
                 task.markComplete();
                 System.out.println("Task \"" + task.title + "\" marked as complete!");
-                 
-            } else {
-                System.out.println("Warning: Task \"" + task.title + "\" cannot be marked as complete because it depends on other tasks.");
             }
         } else {
             System.out.println("Invalid task number.");
@@ -212,6 +224,7 @@ public class TaskManager {
         System.out.print("Enter the task number it depends on: ");
         int precedingTaskNum = scanner.nextInt();
         scanner.nextLine();
+        System.out.println();
 
         if (precedingTaskNum <= 0 || precedingTaskNum > tasks.size()) {
             System.out.println("Invalid task number.");
@@ -228,8 +241,8 @@ public class TaskManager {
             return;
         }
 
-        tasks.get(dependentTaskNum).addDependency(precedingTaskNum);
-        System.out.println("Task \""+tasks.get(dependentTaskNum).getTitle()+"\"now depends on \""+ tasks.get(precedingTaskNum).getTitle() + "\".");
+        tasks.get(dependentTaskNum - 1).addDependency(precedingTaskNum);
+        System.out.println("Task \""+tasks.get(dependentTaskNum - 1 ).getTitle()+"\" now depends on \""+ tasks.get(precedingTaskNum - 1).getTitle() + "\".");
     }
 
     private static boolean detectCycle(int dependentTask, int precedingTask) {
@@ -339,8 +352,17 @@ public class TaskManager {
             return;
         }
         System.out.println("\n=== View All Tasks ===");
+        
         for (int i = 0; i < tasks.size(); i++) {
-            System.out.println((i + 1) + ". " + tasks.get(i));
-        }
-    }
+         Task task = tasks.get(i);
+         String taskStatus = task.isComplete ? "[Complete]" : "[Incomplete]";
+         String taskLabel = "Task " + (char)('A' + i); // Convert index to Task A, Task B, etc.
+         String dependencies = task.dependencies.isEmpty() ? "" : " (Depends on " + task.dependencies.stream()
+                 .map(dep -> "Task " + (char)('A' + dep - 1))  // Convert dependency indices to Task A, Task B, etc.
+                 .collect(Collectors.joining(", ")) + ")";
+
+         // Print the task details
+         System.out.println((i + 1) + ". " + taskStatus + " " + taskLabel + ": " + task.title + " - Due: " + task.dueDate + dependencies);
+     }
+ }
 }
