@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Scanner;
+import java.util.HashMap;
+import java.util.HashSet;
 
 public class TaskManager {
     static List<Task> tasks = new ArrayList<>();
@@ -197,7 +199,70 @@ public class TaskManager {
     }
 
     private static void setTaskDependency() {
-  
+        System.out.println("=== Set Task Dependency ===");
+        System.out.print("Enter task number that depends on another task: ");
+        int dependentTaskNum = scanner.nextInt();
+        scanner.nextLine();
+
+        if (dependentTaskNum <= 0 || dependentTaskNum > task.size()){
+            System.out.println("Invalid task number.");
+            return;
+        }
+
+        System.out.print("Enter the task number it depends on: ");
+        int precedingTaskNum = scanner.nextInt();
+        scanner.nextLine();
+
+        if (precedingTaskNum <= 0 || precedingTaskNum > tasks.size()) {
+            System.out.println("Invalid task number.");
+            return;
+        }
+
+        if (dependentTaskNum == precedingTaskNum) {
+            System.out.println("A task cannot depend on itself.");
+            return;
+        }
+
+        if (detectCycle(dependentTaskNum, precedingTaskNum)) {
+            System.out.println("Error: Creating this dependency would result in a cycle.");
+            return;
+        }
+
+        task.get(dependentTaskNum).addDependency(precedingTaskNum);
+        System.out.println("Task \""+tasks.get(dependentTaskNum).getTitle()+"\"now depends on \""+ tasks.get(precedingTaskNum).getTitle() + "\".");
+    }
+
+    private static boolean detectCycle(int dependentTask, int precedingTask) {
+        Set<Integer> visited = new HashSet<>();
+        visited.add(precedingTask);
+
+        Integer slow = precedingTask;
+        Integer fast = precedingTask;
+
+        while (fast != null && !tasks.get(fast).getDependencies().isEmpty()) {
+            slow = getNextDependency(slow);
+            fast = getNextDependency(getNextDependency(fast));
+
+            if (slow == null || fast == null) {
+                break;
+            }
+
+            if (slow.equals(fast)) {
+                return true;
+            }
+
+            visited.add(slow);
+            visited.add(fast);
+        }
+
+        return false;
+    }
+
+    private static Integer getNextDependency(Integer taskNum) {
+        if (taskNum == null || tasks.get(taskNum).getDependencies().isEmpty()) {
+            return null;
+        }
+        return tasks.get(taskNum).getDependencies().get(0);
     }
 
     public static void editTask() {
