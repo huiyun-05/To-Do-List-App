@@ -204,7 +204,7 @@ public class TaskManager {
         int dependentTaskNum = scanner.nextInt();
         scanner.nextLine();
 
-        if (dependentTaskNum <= 0 || dependentTaskNum > task.size()){
+        if (dependentTaskNum <= 0 || dependentTaskNum > tasks.size()){
             System.out.println("Invalid task number.");
             return;
         }
@@ -228,7 +228,7 @@ public class TaskManager {
             return;
         }
 
-        task.get(dependentTaskNum).addDependency(precedingTaskNum);
+        tasks.get(dependentTaskNum).addDependency(precedingTaskNum);
         System.out.println("Task \""+tasks.get(dependentTaskNum).getTitle()+"\"now depends on \""+ tasks.get(precedingTaskNum).getTitle() + "\".");
     }
 
