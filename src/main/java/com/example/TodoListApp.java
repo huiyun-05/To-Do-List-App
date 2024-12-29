@@ -1,4 +1,7 @@
 package com.example;
+import com.example.Task;
+import java.util.ArrayList;
+import java.util.List;
 import javafx.application.Application;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -15,19 +18,31 @@ import javafx.stage.Stage;
 import java.util.Optional;
 
 public class TodoListApp extends Application {
+    
+    public static List<TodoListApp.Task> convertTasks(List<StorageSystem.Task> storageTasks) {
+        List<TodoListApp.Task> appTasks = new ArrayList<>();
+        for (StorageSystem.Task storageTask : storageTasks) {
+            // Assuming both Task classes have similar fields, map them accordingly
+            TodoListApp.Task appTask = new TodoListApp.Task(
+                storageTask.getTitle(), 
+                storageTask.getDescription(), 
+                storageTask.getDueDate(), 
+                storageTask.getCategory(), 
+                storageTask.getPriority()
+            );
+            appTasks.add(appTask);
+        }
+        return appTasks;
+    }
 
     private ObservableList<Task> tasks = FXCollections.observableArrayList();
     private ListView<Task> taskListView = new ListView<>();
-
-    public static void main(String[] args) {
-        launch(args);
-    }
 
     @Override
     public void start(Stage primaryStage) {
         // Load tasks from the CSV file when the application starts
         StorageSystem.loadTasksFromCSV();  // Load tasks from CSV into StorageSystem
-        tasks.setAll(StorageSystem.getTasks());  // Set tasks from StorageSystem into ObservableList
+        tasks.setAll(FXCollections.observableArrayList(convertTasks(StorageSystem.getTasks())));
         
         primaryStage.setTitle("To-Do List App");
 
@@ -62,6 +77,10 @@ public class TodoListApp extends Application {
         Scene scene = new Scene(root, 600, 400);
         primaryStage.setScene(scene);
         primaryStage.show();
+    }
+    
+    public static void main(String[] args) {
+        launch(args);
     }
 
     // Add task to the list
