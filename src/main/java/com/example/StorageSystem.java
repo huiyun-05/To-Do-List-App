@@ -1,3 +1,5 @@
+package com.example;
+import com.example.Task;
 import java.io.*;
 import java.nio.file.*;
 import java.time.LocalDate;
@@ -9,7 +11,16 @@ public class StorageSystem {
     static final String CSV_FILE = "To-Do-List-App.csv";
 
     // List to store tasks
-    static List<Task> tasks = new ArrayList<>();
+    private static List<Task> tasks = new ArrayList<>();
+    
+    // Retrieve the list of tasks
+    public static List<Task> getTasks() {
+        return tasks;
+    }
+    
+    public static void addTask(Task task) {
+        tasks.add(task);
+    }
 
     public static void main(String[] args) {
         // Load tasks from the CSV file
@@ -80,11 +91,6 @@ public class StorageSystem {
         } catch (IOException e) {
             System.out.println("Error saving tasks to CSV file: " + e.getMessage());
         }
-    }
-    
-    // Retrieve the list of tasks
-    public static List<Task> getTasks() {
-        return tasks;
     }
 
     // Example of a Task class to represent tasks (You may modify it as needed)
