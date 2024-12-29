@@ -62,6 +62,7 @@ public class StorageSystem {
                 tasks.add(task);
             }
             System.out.println("Tasks successfully loaded from CSV file.");
+            reader.close();  // Close the reader after use
         } catch (IOException e) {
             System.err.println("Error loading tasks from CSV file: " + e.getMessage());
         }
