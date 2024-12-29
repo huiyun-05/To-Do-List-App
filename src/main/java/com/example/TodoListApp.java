@@ -25,6 +25,10 @@ public class TodoListApp extends Application {
 
     @Override
     public void start(Stage primaryStage) {
+        // Load tasks from the CSV file when the application starts
+        StorageSystem.loadTasksFromCSV();  // Load tasks from CSV into StorageSystem
+        tasks.setAll(StorageSystem.getTasks());  // Set tasks from StorageSystem into ObservableList
+        
         primaryStage.setTitle("To-Do List App");
 
         // Task List View
@@ -110,6 +114,7 @@ public class TodoListApp extends Application {
             // Create and add the new task
             Task newTask = new Task(title, description, dueDate, category, priority);
             tasks.add(newTask); // Add the new task to the list
+            StorageSystem.saveTasksToCSV(); // Save the updated task list to the CSV
             taskListView.setItems(tasks); // Refresh ListView
         }
     }
@@ -250,7 +255,10 @@ public class TodoListApp extends Application {
                 deleteImageView.setFitWidth(10);
                 Button deleteButton = new Button("", deleteImageView);
                 deleteButton.setStyle("-fx-background-color: transparent;");
-                deleteButton.setOnAction(e -> tasks.remove(task));
+                deleteButton.setOnAction(e -> {
+                    tasks.remove(task);
+                    StorageSystem.saveTasksToCSV(); // Save after removing task
+                });
     
                 taskRow.getChildren().addAll(titleLabel, completeButton, deleteButton);
                 taskBox.getChildren().addAll(taskRow, descriptionLabel, dueDateLabel, categoryLabel, priorityLabel);
