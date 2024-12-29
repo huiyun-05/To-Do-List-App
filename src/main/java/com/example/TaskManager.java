@@ -211,71 +211,58 @@ public class TaskManager {
     }
 
     private static void setTaskDependency() {
-        System.out.println("=== Set Task Dependency ===");
+        System.out.println("\n=== Set Task Dependency ===");
         System.out.print("Enter task number that depends on another task: ");
-        int dependentTaskNum = scanner.nextInt();
-        scanner.nextLine();
-
-        if (dependentTaskNum <= 0 || dependentTaskNum > tasks.size()){
-            System.out.println("Invalid task number.");
-            return;
-        }
-
+        int dependentTask = scanner.nextInt();
         System.out.print("Enter the task number it depends on: ");
-        int precedingTaskNum = scanner.nextInt();
-        scanner.nextLine();
-        System.out.println();
+        int precedingTask = scanner.nextInt();
 
-        if (precedingTaskNum <= 0 || precedingTaskNum > tasks.size()) {
-            System.out.println("Invalid task number.");
+        if (!isValidTaskNumber(dependentTask) || !isValidTaskNumber(precedingTask)) {
+            System.out.println("Invalid task numbers.");
             return;
         }
 
-        if (dependentTaskNum == precedingTaskNum) {
-            System.out.println("A task cannot depend on itself.");
+        if (detectCycle(dependentTask, precedingTask)) {
+            System.out.println("Cannot set dependency. Cycle detected!");
             return;
         }
 
-        if (detectCycle(dependentTaskNum, precedingTaskNum)) {
-            System.out.println("Error: Creating this dependency would result in a cycle.");
-            return;
-        }
-
-        tasks.get(dependentTaskNum - 1).addDependency(precedingTaskNum);
-        System.out.println("Task \""+tasks.get(dependentTaskNum - 1 ).getTitle()+"\" now depends on \""+ tasks.get(precedingTaskNum - 1).getTitle() + "\".");
+        tasks.get(dependentTask - 1).getDependencies().add(precedingTask);
+        System.out.printf("Task \"%s\" now depends on \"%s\".\n",
+                tasks.get(dependentTask - 1).getTitle(),
+                tasks.get(precedingTask - 1).getTitle());
     }
 
     private static boolean detectCycle(int dependentTask, int precedingTask) {
         Set<Integer> visited = new HashSet<>();
-        visited.add(precedingTask);
-
-        Integer slow = precedingTask;
-        Integer fast = precedingTask;
-
-        while (fast != null && !tasks.get(fast).getDependencies().isEmpty()) {
-            slow = getNextDependency(slow);
-            fast = getNextDependency(getNextDependency(fast));
-
-            if (slow == null || fast == null) {
-                break;
-            }
-
-            if (slow.equals(fast)) {
-                return true;
-            }
-
-            visited.add(slow);
-            visited.add(fast);
-        }
-
-        return false;
+        return hasCycle(precedingTask, dependentTask, visited);
     }
 
-    private static Integer getNextDependency(Integer taskNum) {
-        if (taskNum == null || tasks.get(taskNum).getDependencies().isEmpty()) {
-            return null;
+    private static boolean hasCycle(int currentTask, int targetTask, Set<Integer> visited) {
+        if (currentTask == targetTask) {
+            return true; // Cycle detected
         }
-        return tasks.get(taskNum).getDependencies().get(0);
+
+        if (visited.contains(currentTask)) {
+            return false; // Already visited this task, no cycle from here
+        }
+
+        visited.add(currentTask);
+
+        // Check dependencies recursively
+        if (isValidTaskNumber(currentTask) && !tasks.get(currentTask - 1).getDependencies().isEmpty()) {
+            for (int dependency : tasks.get(currentTask - 1).getDependencies()) {
+                if (hasCycle(dependency, targetTask, visited)) {
+                    return true; // Cycle detected through a dependency
+                }
+            }
+        }
+
+        return false; // No cycle detected
+    }
+
+    private static boolean isValidTaskNumber(Integer taskNum) {
+        return taskNum != null && taskNum > 0 && taskNum <= tasks.size();
     }
 
     public static void editTask() {
@@ -363,6 +350,6 @@ public class TaskManager {
 
          // Print the task details
          System.out.println((i + 1) + ". " + taskStatus + " " + taskLabel + ": " + task.title + " - Due: " + task.dueDate + dependencies);
-     }
- }
+        }
+    }
 }
