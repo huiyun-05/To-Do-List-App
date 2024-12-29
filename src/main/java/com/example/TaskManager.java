@@ -17,7 +17,8 @@ public class TaskManager {
     public static void main(String[] args) {
         checkAndGenerateRecurringTasks();
         while (true) {
-            System.out.println("\n1. Add Task");
+            System.out.println("\n=== Menu ===");
+            System.out.println("1. Add Task");
             System.out.println("2. Mark Task as Complete");
             System.out.println("3. Delete Task");
             System.out.println("4. Sort Tasks");
@@ -69,6 +70,7 @@ public class TaskManager {
     }
 
     private static void addTask() {
+        System.out.println("\n=== Add a New Task ===");
         System.out.print("Enter task title: ");
         String title = scanner.nextLine();
         System.out.print("Enter task description: ");
@@ -86,6 +88,7 @@ public class TaskManager {
     }
 
     private static void markTaskComplete() {
+        System.out.println("\n=== Mark Task as Complete ===");
         System.out.print("Enter the task number you want to mark as complete:");
         int taskId = scanner.nextInt();
         System.out.println();
@@ -114,6 +117,7 @@ public class TaskManager {
     }
 
     private static void deleteTask() {
+        System.out.println("\n=== Delete a Task ===");
         System.out.print("Enter the task number you want to delete:");
         int taskId = scanner.nextInt();
         if (taskId >= 1 && taskId <= tasks.size()) {
@@ -125,6 +129,7 @@ public class TaskManager {
     }
 
     private static void sortTasks() {
+        System.out.println("\n=== Sort Tasks ===");
         System.out.println("Sort by:");
         System.out.println("1. Due Date (Ascending)");
         System.out.println("2. Due Date (Descending)");
@@ -177,7 +182,7 @@ public class TaskManager {
     }
 
      private static void addRecurringTask() {
-        System.out.println("=== Add a Recurring Task ===");
+        System.out.println("\n=== Add a Recurring Task ===");
         System.out.print("Enter task title: ");
         String title = scanner.nextLine();
         System.out.print("Enter task description: ");
@@ -266,7 +271,7 @@ public class TaskManager {
     }
 
     public static void editTask() {
-        System.out.println("=== Edit Task ===");
+        System.out.println("\n=== Edit Task ===");
         System.out.print("Enter the task number you want to edit: ");
         int taskNumber = scanner.nextInt();
         scanner.nextLine(); 
