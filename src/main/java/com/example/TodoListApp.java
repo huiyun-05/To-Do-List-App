@@ -1,4 +1,7 @@
 package com.example;
+import com.example.Task;
+import java.util.ArrayList;
+import java.util.List;
 import javafx.application.Application;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -15,16 +18,32 @@ import javafx.stage.Stage;
 import java.util.Optional;
 
 public class TodoListApp extends Application {
+    
+    public static List<TodoListApp.Task> convertTasks(List<StorageSystem.Task> storageTasks) {
+        List<TodoListApp.Task> appTasks = new ArrayList<>();
+        for (StorageSystem.Task storageTask : storageTasks) {
+            // Assuming both Task classes have similar fields, map them accordingly
+            TodoListApp.Task appTask = new TodoListApp.Task(
+                storageTask.getTitle(), 
+                storageTask.getDescription(), 
+                storageTask.getDueDate(), 
+                storageTask.getCategory(), 
+                storageTask.getPriority()
+            );
+            appTasks.add(appTask);
+        }
+        return appTasks;
+    }
 
     private ObservableList<Task> tasks = FXCollections.observableArrayList();
     private ListView<Task> taskListView = new ListView<>();
 
-    public static void main(String[] args) {
-        launch(args);
-    }
-
     @Override
     public void start(Stage primaryStage) {
+        // Load tasks from the CSV file when the application starts
+        StorageSystem.loadTasksFromCSV();  // Load tasks from CSV into StorageSystem
+        tasks.setAll(FXCollections.observableArrayList(convertTasks(StorageSystem.getTasks())));
+        
         primaryStage.setTitle("To-Do List App");
 
         // Task List View
@@ -58,6 +77,10 @@ public class TodoListApp extends Application {
         Scene scene = new Scene(root, 600, 400);
         primaryStage.setScene(scene);
         primaryStage.show();
+    }
+    
+    public static void main(String[] args) {
+        launch(args);
     }
 
     // Add task to the list
@@ -110,6 +133,7 @@ public class TodoListApp extends Application {
             // Create and add the new task
             Task newTask = new Task(title, description, dueDate, category, priority);
             tasks.add(newTask); // Add the new task to the list
+            StorageSystem.saveTasksToCSV(); // Save the updated task list to the CSV
             taskListView.setItems(tasks); // Refresh ListView
         }
     }
@@ -250,7 +274,10 @@ public class TodoListApp extends Application {
                 deleteImageView.setFitWidth(10);
                 Button deleteButton = new Button("", deleteImageView);
                 deleteButton.setStyle("-fx-background-color: transparent;");
-                deleteButton.setOnAction(e -> tasks.remove(task));
+                deleteButton.setOnAction(e -> {
+                    tasks.remove(task);
+                    StorageSystem.saveTasksToCSV(); // Save after removing task
+                });
     
                 taskRow.getChildren().addAll(titleLabel, completeButton, deleteButton);
                 taskBox.getChildren().addAll(taskRow, descriptionLabel, dueDateLabel, categoryLabel, priorityLabel);

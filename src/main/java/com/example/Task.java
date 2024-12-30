@@ -5,15 +5,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Task {
-    String title;
-    String description;
-    String dueDate;
-    boolean isComplete;
-    String category;
-    String priority;
-    String recurrence; // daily, weekly, monthly
-    LocalDate nextCreationDate;
-    List<Integer> dependencies = new ArrayList<>();
+    protected String title;
+    protected String description;
+    protected String dueDate;
+    protected String category;
+    protected String priority;
+    protected boolean isComplete;
+    protected List<Integer> dependencies; 
+    protected String recurrence; // daily, weekly, monthly
+    protected LocalDate nextCreationDate;
 
     public Task(String title, String description, String dueDate, String category, String priority) {
         this.title = title;
@@ -27,8 +27,9 @@ public class Task {
     public Task(String title, String description, String recurrence, LocalDate now) {
         this.title = title;
         this.description = description;
-        this.recurrence = recurrence;
         this.isComplete = false;
+        this.dependencies = new ArrayList<>();
+        this.recurrence = recurrence;
         this.nextCreationDate = now; // Initialize to the current date
     }
     
@@ -80,12 +81,12 @@ public class Task {
         this.priority = priority;
     }
 
-    public List<Integer> getDependencies() {
-        return dependencies;
+    public List<Integer> getDependencies() { 
+        return dependencies; 
     }
-
-    public void setDependencies(List<Integer> dependencies) {
-        this.dependencies = dependencies;
+    
+    public void setDependencies(List<Integer> dependencies) { 
+        this.dependencies = dependencies; 
     }
     
     public void setRecurrence(String recurrence) {
