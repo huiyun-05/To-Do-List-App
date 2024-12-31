@@ -22,6 +22,7 @@ public class Task {
         this.isComplete = false;
         this.category = category;
         this.priority = priority;
+        this.dependencies = new ArrayList<>();
     }
     
     public Task(String title, String description, String recurrence, LocalDate now) {
