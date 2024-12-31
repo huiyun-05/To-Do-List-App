@@ -119,14 +119,33 @@ public class TaskManager {
         System.out.println("\n=== Delete a Task ===");
         System.out.print("Enter the task number you want to delete:");
         int taskId = scanner.nextInt();
+        
         if (taskId >= 1 && taskId <= tasks.size()) {
+            // Remove dependencies from other tasks
+            for (Task t : tasks) {
+                t.dependencies.remove(Integer.valueOf(taskId));
+            }
             Task task = tasks.remove(taskId - 1);
             System.out.println("Task \"" + task.title + "\" deleted successfully!");
+            // Update dependencies of remaining tasks
+            for (int i = 0; i < tasks.size(); i++) {
+                task = tasks.get(i);
+
+                // Remove references to the deleted task
+                task.dependencies.removeIf(dep -> dep == taskId);
+
+                // Adjust indices of dependencies greater than the deleted task ID
+                for (int j = 0; j < task.dependencies.size(); j++) {
+                    if (task.dependencies.get(j) > taskId) {
+                        task.dependencies.set(j, task.dependencies.get(j) - 1);
+                    }
+                }
+            }
         } else {
             System.out.println("Invalid task number.");
         }
     }
-
+    
     private static void sortTasks() {
         System.out.println("\n=== Sort Tasks ===");
         System.out.println("Sort by:");
@@ -225,7 +244,19 @@ public class TaskManager {
             System.out.println("Invalid task numbers.");
             return;
         }
-
+        
+        // Prevent a task from depending on itself
+        if (dependentTask == precedingTask) {
+            System.out.println("A task cannot depend on itself. Try again.");
+            return;
+        }   
+            
+         // Check if the dependency already exists
+        if (tasks.get(dependentTask - 1).getDependencies().contains(precedingTask)) {
+            System.out.println("This dependency already exists.");
+            return;
+        }
+        
         if (detectCycle(dependentTask, precedingTask)) {
             System.out.println("Cannot set dependency. Cycle detected!");
             return;
