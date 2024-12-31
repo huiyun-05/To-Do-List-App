@@ -399,7 +399,7 @@ public class TaskManager {
                 break;
             case 6:
                 System.out.println("Set Task Dependency");
-                
+                setTaskDependency();
                 return;
             case 7:
                 System.out.println("Canceled editing.");
