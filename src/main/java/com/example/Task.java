@@ -1,6 +1,8 @@
 package com.example;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,13 +27,18 @@ public class Task {
         this.dependencies = new ArrayList<>();
     }
     
-    public Task(String title, String description, String recurrence, LocalDate now) {
+    public Task(String title, String description, String nextCreationDate, String recurrence) {
+        try {
+            this.nextCreationDate = LocalDate.parse(nextCreationDate, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        } catch (DateTimeParseException e) {
+            System.out.println("Invalid date format. Please use YYYY-MM-DD.");
+            return;
+        }
         this.title = title;
         this.description = description;
+        this.recurrence = recurrence;
         this.isComplete = false;
         this.dependencies = new ArrayList<>();
-        this.recurrence = recurrence;
-        this.nextCreationDate = now; // Initialize to the current date
     }
     
     public String getTitle() {
@@ -98,22 +105,16 @@ public class Task {
         return recurrence != null && !recurrence.isEmpty();
     }
     
-    public void updateNextCreationDate() {
-        if (nextCreationDate == null) {
-            nextCreationDate = LocalDate.now(); // Initialize if null
-        }
-        switch (recurrence.toLowerCase()) {
+    public LocalDate getNextDueDate() {
+        switch (recurrence) {
             case "daily":
-                nextCreationDate = nextCreationDate.plusDays(1);
-                break;
+                return nextCreationDate.plusDays(1);
             case "weekly":
-                nextCreationDate = nextCreationDate.plusWeeks(1);
-                break;
+                return nextCreationDate.plusWeeks(1);
             case "monthly":
-                nextCreationDate = nextCreationDate.plusMonths(1);
-                break;
+                return nextCreationDate.plusMonths(1);
             default:
-                System.out.println("Invalid recurrence type.");
+                return nextCreationDate;
         }
     }
 

@@ -1,6 +1,7 @@
 package com.example;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -12,9 +13,11 @@ import java.util.stream.Collectors;
 public class TaskManager {
     static List<Task> tasks = new ArrayList<>();
     static Scanner scanner = new Scanner(System.in);
+    static LocalDate lastGenerationDate = LocalDate.of(2000, 1, 1); //Initialize to a past date
+    static DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     public static void main(String[] args) {
-        checkAndGenerateRecurringTasks();
+        generateRecurringTasks();
         while (true) {
             System.out.println("\n=== Menu ===");
             System.out.println("1. Add Task");
@@ -199,38 +202,78 @@ public class TaskManager {
         }
     }
 
-     private static void addRecurringTask() {
-        System.out.println("\n=== Add a Recurring Task ===");
+    private static void addRecurringTask() {
+        System.out.println("=== Add a Recurring Task ===");
         System.out.print("Enter task title: ");
         String title = scanner.nextLine();
         System.out.print("Enter task description: ");
         String description = scanner.nextLine();
         System.out.print("Enter recurrence interval (daily, weekly, monthly): ");
-        String interval = scanner.nextLine().toLowerCase();
+        String recurrence = scanner.nextLine().toLowerCase();
+        if (!recurrence.equals("daily") && !recurrence.equals("weekly") && !recurrence.equals("monthly")) {
+            System.out.println("Invalid interval! Please enter 'daily', 'weekly', or 'monthly'.");
+            return;
+        }
+        LocalDate initialDueDate = LocalDate.now();
 
-        // Create task with today's date as start
-        LocalDate today = LocalDate.now();
-        Task task = new Task(title, description, interval, today);
-        tasks.add(task);
-        System.out.println("\nRecurring Task \"" + title + "\" created successfully!");
+        Task task = new Task(title, description, initialDueDate.format(dateFormatter), recurrence);
+     
+        if (task.nextCreationDate != null) {
+            tasks.add(task);
+            System.out.println("\nRecurring task \"" + title + "\" added successfully!");
+        }
     }
 
-    private static void checkAndGenerateRecurringTasks() {
-        LocalDate today = LocalDate.now(); // Get today's date
-        List<Task> newTasks = new ArrayList<>(); // Temporary list for new tasks
+    private static void generateRecurringTasks() {
+        LocalDate today = LocalDate.now();
+        if (lastGenerationDate != null && lastGenerationDate.equals(today)) {
+            return; // Don't generate tasks more than once a day
+        }
+
+        List<Task> newTasks = new ArrayList<>();
+        Set<String> existingTasks = new HashSet<>();
+
+        // Collect already existing tasks in the set to check for duplicates
+        for (Task task : tasks) {
+            existingTasks.add(task.title + task.nextCreationDate.toString());
+        }
 
         for (Task task : tasks) {
-            if (task.isRecurring() && (task.nextCreationDate != null) && !today.isBefore(task.nextCreationDate)) {
-                // Create a new task for the recurring task
-                Task newTask = new Task(task.title, task.description, task.recurrence, task.nextCreationDate);
-                newTasks.add(newTask);
+            if (!task.recurrence.isEmpty()) {
+                LocalDate nextDueDate = task.getNextDueDate();
 
-                // Update the next creation date based on recurrence interval
-                task.updateNextCreationDate();
+                // Generate tasks until the next due date is beyond today
+                while (!nextDueDate.isAfter(today)) {
+                    if (!existingTasks.contains(task.title + nextDueDate.toString())) {
+                        // Create new task for the next due date
+                        Task newTask = new Task(task.title, task.description, nextDueDate.format(dateFormatter), task.recurrence);
+                        newTasks.add(newTask);
+                        existingTasks.add(task.title + nextDueDate.toString()); // Mark this task as existing
+                    }
+                    // Increment the due date based on the recurrence interval
+                    switch (task.recurrence) {
+                        case "daily":
+                            nextDueDate = nextDueDate.plusDays(1);
+                            break;
+                        case "weekly":
+                            nextDueDate = nextDueDate.plusWeeks(1);
+                            break;
+                        case "monthly":
+                            nextDueDate = nextDueDate.plusMonths(1);
+                            break;
+                    }
+                }
             }
         }
-        // Add all newly generated tasks to the main task list
+
+        // Add newly generated tasks
         tasks.addAll(newTasks);
+
+        // Sort tasks by due date
+        tasks.sort(Comparator.comparing(t -> t.nextCreationDate));
+
+        // Update the last generation date
+        lastGenerationDate = today;
     }
 
     private static void setTaskDependency() {
@@ -374,7 +417,7 @@ public class TaskManager {
             return;
         }
         System.out.println("\n=== View All Tasks ===");
-        
+        generateRecurringTasks();
         for (int i = 0; i < tasks.size(); i++) {
          Task task = tasks.get(i);
          String taskStatus = task.isComplete ? "[Complete]" : "[Incomplete]";
