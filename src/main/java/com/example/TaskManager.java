@@ -381,8 +381,7 @@ public class TaskManager {
             case 3:
                 System.out.print("Enter the new due date (YYYY-MM-DD): ");
                 temp = task.getDueDate();
-                String newDueDate = scanner.nextLine();
-                task.setDueDate(newDueDate);
+                task.setDueDate(scanner.nextLine());
                 System.out.println("\nTask \"" + temp + "\" has been updated to \"" + task.getDueDate() + ".\"");
                 break;
             case 4:
