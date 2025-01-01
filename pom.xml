@@ -57,6 +57,13 @@
         <version>21</version> <!-- Use JavaFX 21 -->
     </dependency>
     
+    <!-- Add JavaMail dependency -->
+    <dependency>
+        <groupId>com.sun.mail</groupId>
+        <artifactId>javax.mail</artifactId>
+        <version>1.6.2</version>
+    </dependency>
+    
     <dependency>
         <groupId>com.opencsv</groupId>
         <artifactId>opencsv</artifactId>
@@ -99,6 +106,7 @@
       <version>0.0.5</version>
       <configuration>
         <mainClass>com.example.TodoListApp</mainClass>
+        <mainClass>com.example.EmailNotification</mainClass>
         <options>
           <option>--add-modules</option>
           <option>javafx.controls,javafx.fxml</option>
