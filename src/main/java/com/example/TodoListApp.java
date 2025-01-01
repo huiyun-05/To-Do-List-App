@@ -1,4 +1,5 @@
 package com.example;
+
 import com.example.Task;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +17,7 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import java.util.Optional;
+import static javafx.application.Application.launch;
 
 public class TodoListApp extends Application {
     
@@ -82,7 +84,19 @@ public class TodoListApp extends Application {
     public static void main(String[] args) {
         launch(args);
     }
-
+    
+    // Inside TodoListApp class, a conversion method
+    private StorageSystem.Task convertToStorageSystemTask(TodoListApp.Task task) {
+        // Assuming StorageSystem.Task has a similar constructor
+        return new StorageSystem.Task(
+                task.getTitle(),
+                task.getDescription(),
+                task.getDueDate(),
+                task.getCategory(),
+                task.getPriority()
+        );
+    }
+    
     // Add task to the list
     private void addTask() {
         // Create a dialog box for adding a task
@@ -133,6 +147,7 @@ public class TodoListApp extends Application {
             // Create and add the new task
             Task newTask = new Task(title, description, dueDate, category, priority);
             tasks.add(newTask); // Add the new task to the list
+            StorageSystem.addTask(convertToStorageSystemTask(newTask)); // Add to StorageSystem to persist the task
             StorageSystem.saveTasksToCSV(); // Save the updated task list to the CSV
             taskListView.setItems(tasks); // Refresh ListView
         }
