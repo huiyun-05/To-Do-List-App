@@ -5,6 +5,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Task {
     protected String title;
@@ -65,11 +66,11 @@ public class Task {
         this.dueDate = dueDate;
     }
 
-    public boolean isIsComplete() {
+    public boolean isComplete() {
         return isComplete;
     }
 
-    public void setIsComplete(boolean isComplete) {
+    public void setComplete(boolean isComplete) {
         this.isComplete = isComplete;
     }
 
@@ -132,5 +133,23 @@ public class Task {
 
     public String toString() {
         return (isComplete ? "[Complete] " : "[Incomplete] ") + title + " - Due: " + dueDate + " - Category: " + category + " - Priority: " + priority;
+    }
+    
+    public void toggleCompleted() {
+    this.isComplete = !this.isComplete;
+    // Call StorageSystem to save updated task list after toggling completion
+    StorageSystem.saveTasksToCSV();  // Ensure that save method is called here
+    }
+    // Method to convert Task to CSV format
+    public String toCSVFormat() {
+    return title + "," +
+           description + "," +
+           dueDate + "," +
+           category + "," +
+           priority + "," +
+           isComplete() + "," +
+           String.join(";", dependencies.stream().map(String::valueOf).collect(Collectors.toList())) + "," +
+           recurrence + "," +
+           (nextCreationDate != null ? nextCreationDate : "");
     }
 }
