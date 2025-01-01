@@ -1,4 +1,5 @@
 package com.example;
+
 import com.example.Task;
 import java.io.*;
 import java.nio.file.*;
@@ -70,30 +71,23 @@ public class StorageSystem {
     
     // Save tasks to CSV file
     public static void saveTasksToCSV() {
-        try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(CSV_FILE))) {
-            // Writing the header row
-            writer.write("Title,Description,Due Date (YYYY-MM-DD),Category (Homework/ Personal/ Work),Priority Level (low/ medium/ high),Completion Status (complete/ incomplete),Dependencies,Recurrence,Next Creation Date (YYYY-MM-DD)");
+    try (BufferedWriter writer = Files.newBufferedWriter(Paths.get("tasks.csv"))) {
+        // Write the header row
+        writer.write("Title,Description,Due Date (YYYY-MM-DD),Category (Homework/ Personal/ Work),Priority Level (low/ medium/ high),Completion Status (complete/ incomplete),Dependencies,Recurrence,Next Creation Date (YYYY-MM-DD)");
+        writer.newLine();
+
+        // Write the task data
+        for (Task task : tasks) {
+            writer.write(task.toCSVFormat());  // This uses the toCSVFormat() method from the Task class
             writer.newLine();
-
-            // Writing tasks data
-            for (Task task : tasks) {
-                writer.write(task.getTitle() + "," +
-                        task.getDescription() + "," +
-                        task.getDueDate() + "," +
-                        task.getCategory() + "," +
-                        task.getPriority() + "," +
-                        task.isComplete() + "," +
-                        String.join(";", task.getDependencies().stream().map(String::valueOf).collect(Collectors.toList())) + "," +
-                        task.getRecurrence() + "," +
-                        (task.getNextCreationDate() != null ? task.getNextCreationDate() : ""));
-                writer.newLine();
-            }
-            System.out.println("Tasks successfully saved to CSV file.");
-        } catch (IOException e) {
-            System.out.println("Error saving tasks to CSV file: " + e.getMessage());
         }
-    }
 
+        System.out.println("Tasks successfully saved to CSV file.");
+    } catch (IOException e) {
+        System.out.println("Error saving tasks to CSV file: " + e.getMessage());
+    }
+}
+    
     // Example of a Task class to represent tasks (You may modify it as needed)
     static class Task {
         private String title;
