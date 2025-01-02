@@ -82,8 +82,9 @@ public class TaskManager {
         String category = scanner.nextLine();
         System.out.print("Enter priority level (Low, Medium, High): ");
         String priority = scanner.nextLine();
-
+        
         GeneralTask newTask = new GeneralTask(title, description, dueDate, category, priority);
+        tasks.add(newTask);
         StorageSystem.addTask(newTask);
         StorageSystem.saveTasksToCSV();
         System.out.println("\nTask \"" + title + "\" added successfully!");
