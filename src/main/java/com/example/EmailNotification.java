@@ -2,58 +2,82 @@ package com.example;
 
 import javax.mail.*;
 import javax.mail.internet.*;
-import java.util.Properties;
-import javax.mail.Authenticator;
-import javax.mail.PasswordAuthentication;
-import org.springframework.boot.rsocket.server.RSocketServer.Transport;
+import java.util.*;
+import java.text.*;
+import java.text.ParseException;
 
 public class EmailNotification {
 
-    public static void sendEmail(String toEmail, String subject, String body) throws MessagingException {
-        // Configuration for sending email
+    // Method to send the email
+    public static void sendEmail(String receiverEmail, String taskName, String dueDate) {
+        String userEmail = "youremail@gmail.com"; // Sender's email
+        String password = "yourpassword"; // Your email password 
+        
+        // Set SMTP properties for Gmail
+        Properties pr = new Properties();
+        pr.put("mail.smtp.host", "smtp.gmail.com");
+        pr.put("mail.smtp.port", "587");
+        pr.put("mail.smtp.auth", "true");
+        pr.put("mail.smtp.starttls.enable", "true");
 
-        String host = "smtp.gmail.com"; // Example: Gmail SMTP
-        String fromEmail = "youremail@gmail.com"; // user email address 
-        String password = "yourpassword"; // user email password
-
-        // Setup the mail server properties
-        Properties properties = System.getProperties();
-        properties.put("mail.smtp.host", host);
-        properties.put("mail.smtp.port", "587");
-        properties.put("mail.smtp.auth", "true");
-        properties.put("mail.smtp.starttls.enable", "true");
-
-        // Get the email session with authentication
-        Session session = Session.getInstance(properties, new Authenticator() {
+        // Create session
+        Session session = Session.getInstance(pr, new Authenticator() {
             @Override
             protected PasswordAuthentication getPasswordAuthentication() {
-                return new PasswordAuthentication(fromEmail, password);
+                return new PasswordAuthentication(userEmail, password);
             }
         });
-        try {
-            // Create a MimeMessage for the email
-            MimeMessage message = new MimeMessage(session);
-            message.setFrom(new InternetAddress(fromEmail));
-            message.addRecipient(Message.RecipientType.TO, new InternetAddress(toEmail));
-            message.setSubject(subject);
-            message.setText(body);
 
-            // Send the email
+        try {
+            
+            // Create a message
+            Message message = new MimeMessage(session);
+            message.setFrom(new InternetAddress(userEmail));
+            message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(receiverEmail));
+            message.setSubject("Task Reminder: " + taskName);
+            message.setText("Reminder: The task \"" + taskName + "\" is due in 24 hours on " + dueDate + ".");
+
+            // Send message
             Transport.send(message);
-            System.out.println("Reminder email sent.");
-        } catch (MessagingException mex) {
-            mex.printStackTrace();
+            System.out.println("Reminder email sent successfully!");
+
+        } catch (MessagingException e) {
+           System.err.println("Email cannot be sent :"  + e.getMessage());
+        }
+    }
+
+    // Method to calculate the time difference and send reminder if within 24 hours
+    public static void checkTaskDueDate(String receiverEmail, String taskName, String dueDateStr) {
+        try {
+            // Parse the due date (assuming format "yyyy-MM-dd HH:mm")
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+            Date dueDate = dateFormat.parse(dueDateStr);
+            Date currentDate = new Date();
+
+            // Calculate time difference
+            long diffInMillies = dueDate.getTime() - currentDate.getTime();
+            long diffInHours = diffInMillies / (60 * 60 * 1000);
+
+            // Send an email reminder if the due date is within 24 hours
+            if (diffInHours <= 24 && diffInHours > 0) {
+                sendEmail(receiverEmail, taskName, dueDateStr);
+            } else {
+                System.out.println("No reminder necessary. Task is not due within 24 hours.");
+            }
+
+        }catch (ParseException e) {
+            
+            System.out.println("The date format you entered is incorrect. Please try again with the correct format (yyyy-MM-dd HH:mm).");
         }
     }
 
     public static void main(String[] args) {
-        String toEmail = "useremail@example.com"; // Replace with the user email address
-        String taskName = "Finish Assignment"; // Example task
-        String dueDate = "2024-12-26 23:59"; // Example due date as string
-        String subject = "Task Reminder: " + taskName;
-        String body = "Reminder: The task \"" + taskName + "\" is due in 24 hours (" + dueDate + ").";
+        // User input: configure the email address and task details
+        String receiverEmail = "recipientemail@example.com";  // Receiver's email
+        String taskName = "Finish Assignment";
+        String dueDate = "2025-01-02 10:00";  // Task due date (example)
 
-        // Send email reminder
-        sendEmail(toEmail, subject, body);
+        // Check if the task is due within 24 hours
+        checkTaskDueDate(receiverEmail, taskName, dueDate);
     }
 }
