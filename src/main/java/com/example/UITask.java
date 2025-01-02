@@ -22,10 +22,10 @@ import static javafx.application.Application.launch;
 
 public class UITask extends Application {
     
-    public static List<UITask.Task> convertTasks(List<com.example.StorageSystem.StorageTask> storageTasks) {
-        List<UITask.Task> appTasks = new ArrayList<>();
+    public static List<Task> convertTasks(List<StorageTask> storageTasks) {
+        List<Task> appTasks = new ArrayList<>();
         for (StorageTask storageTask : storageTasks) {
-            appTasks.add(new UITask.Task(
+            appTasks.add(new Task(
                 storageTask.getTitle(),
                 storageTask.getDescription(),
                 storageTask.getDueDate(),
@@ -144,7 +144,7 @@ public class UITask extends Application {
             String priority = priorityBox.getValue();
 
             // Create and add the new task
-            UITask.Task newTask = new UITask.Task(title, description, dueDate, category, priority);
+            Task newTask = new Task(title, description, dueDate, category, priority);
             StorageTask storageTask = convertToStorageSystemTask(newTask); // Convert to StorageTask
             StorageSystem.getStorageTasks().add(storageTask); // Add the converted StorageTask to the list
             StorageSystem.addTask(convertToStorageSystemTask(newTask)); // Add to StorageSystem to persist the task

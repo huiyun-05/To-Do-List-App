@@ -1,4 +1,6 @@
 package com.example;
+import static com.example.StorageSystem.loadTasksFromCSV;
+import static com.example.StorageSystem.saveTasksToCSV;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -86,7 +88,7 @@ public class TaskManager {
         GeneralTask newTask = new GeneralTask(title, description, dueDate, category, priority);
         tasks.add(newTask);
         StorageSystem.addTask(newTask);
-        StorageSystem.saveTasksToCSV();
+        saveTasksToCSV();
         System.out.println("\nTask \"" + title + "\" added successfully!");
     }
 
@@ -95,6 +97,9 @@ public class TaskManager {
         System.out.print("Enter the task number you want to mark as complete:");
         int taskId = scanner.nextInt();
         System.out.println();
+        
+        // Load tasks from CSV before proceeding
+        loadTasksFromCSV();
         
         if (taskId >= 1 && taskId <= tasks.size()) {
             GeneralTask task = tasks.get(taskId - 1);
@@ -113,6 +118,8 @@ public class TaskManager {
             if (canMarkComplete) {
                 task.markComplete();
                 System.out.println("Task \"" + task.title + "\" marked as complete!");
+                // Save the updated tasks back to CSV
+                saveTasksToCSV();
             }
         } else {
             System.out.println("Invalid task number.");
@@ -123,6 +130,9 @@ public class TaskManager {
         System.out.println("\n=== Delete a Task ===");
         System.out.print("Enter the task number you want to delete:");
         int taskId = scanner.nextInt();
+        
+        // Load tasks from CSV before proceeding
+        loadTasksFromCSV();
         
         if (taskId >= 1 && taskId <= tasks.size()) {
             // Remove dependencies from other tasks
@@ -145,6 +155,8 @@ public class TaskManager {
                     }
                 }
             }
+            // Save the updated tasks back to CSV
+            saveTasksToCSV();
         } else {
             System.out.println("Invalid task number.");
         }
@@ -159,6 +171,9 @@ public class TaskManager {
         System.out.println("4. Priority (Low to High)");
         int choice = scanner.nextInt();
         scanner.nextLine(); // consume the newline character
+        
+        // Load tasks from CSV before sorting
+        loadTasksFromCSV();
 
         switch (choice) {
             case 1:
@@ -180,12 +195,17 @@ public class TaskManager {
             default:
                 System.out.println("Invalid option.");
         }
+        // Save the updated tasks back to CSV after sorting
+        saveTasksToCSV();
     }
     
     private static void searchTasks() {
         System.out.println("=== Search Tasks ===");
         System.out.print("Enter a keyword to search by title or description: ");
         String keyword = scanner.nextLine().toLowerCase();
+        
+        // Load tasks from CSV before searching
+        loadTasksFromCSV();
 
         System.out.println("\n=== Search Results ===");
         boolean found = false;
@@ -215,6 +235,10 @@ public class TaskManager {
             System.out.println("Invalid interval! Please enter 'daily', 'weekly', or 'monthly'.");
             return;
         }
+        
+        // Load tasks from CSV before adding the new task
+        loadTasksFromCSV();
+        
         LocalDate initialDueDate = LocalDate.now();
         
         GeneralTask task = new GeneralTask(title, description, initialDueDate.format(dateFormatter), recurrence);
@@ -222,6 +246,9 @@ public class TaskManager {
         if (task.nextCreationDate != null) {
             tasks.add(task);
             System.out.println("\nRecurring task \"" + title + "\" added successfully!");
+            
+            // Save the updated task list to the CSV file
+            saveTasksToCSV();
         }
     }
 
@@ -233,7 +260,7 @@ public class TaskManager {
 
         List<GeneralTask> newTasks = new ArrayList<>();
         Set<String> existingTasks = new HashSet<>();
-
+        loadTasksFromCSV();
         // Collect already existing tasks in the set to check for duplicates
         for (GeneralTask task : tasks) {
             existingTasks.add(task.title + task.nextCreationDate.toString());
@@ -242,6 +269,9 @@ public class TaskManager {
         for (GeneralTask task : tasks) {
             if (!task.recurrence.isEmpty()) {
                 LocalDate nextDueDate = task.getNextDueDate();
+                
+                // Load tasks from CSV before generating recurring tasks
+                
 
                 // Generate tasks until the next due date is beyond today
                 while (!nextDueDate.isAfter(today)) {
@@ -262,12 +292,17 @@ public class TaskManager {
 
         // Sort tasks by due date
         tasks.sort(Comparator.comparing(t -> t.nextCreationDate));
+        
+        // Save the updated tasks list to the CSV file
+        saveTasksToCSV();
 
         // Update the last generation date
         lastGenerationDate = today;
     }
 
     private static void setTaskDependency() {
+        // Load tasks from CSV before setting the dependency
+        loadTasksFromCSV();
         System.out.println("\n=== Set Task Dependency ===");
         System.out.print("Enter task number that depends on another task: ");
         int dependentTask = scanner.nextInt();
@@ -300,6 +335,9 @@ public class TaskManager {
         System.out.printf("Task \"%s\" now depends on \"%s\".\n",
                 tasks.get(dependentTask - 1).getTitle(),
                 tasks.get(precedingTask - 1).getTitle());
+        
+        // Save the updated tasks list to the CSV file
+        saveTasksToCSV();
     }
 
     private static boolean detectCycle(int dependentTask, int precedingTask) {
@@ -335,6 +373,9 @@ public class TaskManager {
     }
 
     public static void editTask() {
+        // Load tasks from CSV before editing
+        loadTasksFromCSV();
+        
         System.out.println("\n=== Edit Task ===");
         System.out.print("Enter the task number you want to edit: ");
         int taskNumber = scanner.nextInt();
@@ -397,11 +438,17 @@ public class TaskManager {
             default:
                 System.out.println("Invalid choice.");
         }
+        // Save the updated tasks list to the CSV file
+        saveTasksToCSV();
+        
         viewAllTasks();
     }
 
     
     private static void viewAllTasks() {
+        // Load tasks from CSV before viewing
+        loadTasksFromCSV();
+        
         if (tasks.isEmpty()) {
             System.out.println("\nNo tasks available!");
             return;
@@ -409,15 +456,15 @@ public class TaskManager {
         System.out.println("\n=== View All Tasks ===");
         generateRecurringTasks();
         for (int i = 0; i < tasks.size(); i++) {
-         GeneralTask task = tasks.get(i);
-         String taskStatus = task.isComplete ? "[Complete]" : "[Incomplete]";
-         String taskLabel = "Task " + (char)('A' + i); // Convert index to Task A, Task B, etc.
-         String dependencies = task.dependencies.isEmpty() ? "" : " (Depends on " + task.dependencies.stream()
-                 .map(dep -> "Task " + (char)('A' + dep - 1))  // Convert dependency indices to Task A, Task B, etc.
-                 .collect(Collectors.joining(", ")) + ")";
+            GeneralTask task = tasks.get(i);
+            String taskStatus = task.isComplete ? "[Complete]" : "[Incomplete]";
+            String taskLabel = "Task " + (char) ('A' + i); // Convert index to Task A, Task B, etc.
+            String dependencies = task.dependencies.isEmpty() ? "" : " (Depends on " + task.dependencies.stream()
+                    .map(dep -> "Task " + (char) ('A' + dep - 1)) // Convert dependency indices to Task A, Task B, etc.
+                    .collect(Collectors.joining(", ")) + ")";
 
-         // Print the task details
-         System.out.println((i + 1) + ". " + taskStatus + " " + taskLabel + ": " + task.title + " - Due: " + task.dueDate + dependencies);
+            // Print the task details
+            System.out.println((i + 1) + ". " + taskStatus + " " + taskLabel + ": " + task.title + " - Due: " + task.dueDate + dependencies);
         }
     }
 }
