@@ -105,13 +105,17 @@ public class TaskManager {
             GeneralTask task = tasks.get(taskId - 1);
             boolean canMarkComplete = true;
          
-            for (Integer dep : task.dependencies) {
-                if (!tasks.get(dep - 1).isComplete) {
-                    System.out.println("Warning: Task \"" + task.title + "\" cannot be marked as complete because it depends on \"" 
-                            + tasks.get(dep - 1).getTitle() + "\". Please complete \"" 
-                            + tasks.get(dep - 1).getTitle() + "\" first.");
-                    canMarkComplete = false;
-                    break;
+            // Check dependencies only if they exist
+            if (task.dependencies != null) {
+                for (Integer dep : task.dependencies) {
+                    if (!tasks.get(dep - 1).isComplete) {
+                        System.out.println("Warning: Task \"" + task.title
+                                + "\" cannot be marked as complete because it depends on \""
+                                + tasks.get(dep - 1).getTitle() + "\". Please complete \""
+                                + tasks.get(dep - 1).getTitle() + "\" first.");
+                        canMarkComplete = false;
+                        break;
+                    }
                 }
             }
 
@@ -137,7 +141,9 @@ public class TaskManager {
         if (taskId >= 1 && taskId <= tasks.size()) {
             // Remove dependencies from other tasks
             for (GeneralTask t : tasks) {
-                t.dependencies.remove(Integer.valueOf(taskId));
+                if (t.dependencies != null) {
+                    t.dependencies.remove(Integer.valueOf(taskId));
+                }
             }
             GeneralTask task = tasks.remove(taskId - 1);
             System.out.println("Task \"" + task.title + "\" deleted successfully!");
@@ -145,13 +151,15 @@ public class TaskManager {
             for (int i = 0; i < tasks.size(); i++) {
                 task = tasks.get(i);
 
-                // Remove references to the deleted task
-                task.dependencies.removeIf(dep -> dep == taskId);
+                if (task.dependencies != null) {
+                    // Remove references to the deleted task
+                    task.dependencies.removeIf(dep -> dep == taskId);
 
-                // Adjust indices of dependencies greater than the deleted task ID
-                for (int j = 0; j < task.dependencies.size(); j++) {
-                    if (task.dependencies.get(j) > taskId) {
-                        task.dependencies.set(j, task.dependencies.get(j) - 1);
+                    // Adjust indices of dependencies greater than the deleted task ID
+                    for (int j = 0; j < task.dependencies.size(); j++) {
+                        if (task.dependencies.get(j) > taskId) {
+                            task.dependencies.set(j, task.dependencies.get(j) - 1);
+                        }
                     }
                 }
             }
