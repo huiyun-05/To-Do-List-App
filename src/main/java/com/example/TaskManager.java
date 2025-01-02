@@ -252,17 +252,7 @@ public class TaskManager {
                         existingTasks.add(task.title + nextDueDate.toString()); // Mark this task as existing
                     }
                     // Increment the due date based on the recurrence interval
-                    switch (task.recurrence) {
-                        case "daily":
-                            nextDueDate = nextDueDate.plusDays(1);
-                            break;
-                        case "weekly":
-                            nextDueDate = nextDueDate.plusWeeks(1);
-                            break;
-                        case "monthly":
-                            nextDueDate = nextDueDate.plusMonths(1);
-                            break;
-                    }
+                    nextDueDate = task.getNextDueDate();
                 }
             }
         }
