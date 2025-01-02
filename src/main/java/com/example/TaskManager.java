@@ -538,14 +538,12 @@ public class TaskManager {
     private static void viewAllTasks() {
         // Load tasks from CSV before viewing
         loadTasksFromCSV();
-        
+
         if (tasks.isEmpty()) {
             System.out.println("\nNo tasks available!");
             return;
         }
-        
-        // Generate recurring tasks (optional: comment out if not desired here)
-        generateRecurringTasks();
+
         // Sort tasks by due date before displaying
         tasks.sort(Comparator.comparing(GeneralTask::getDueDate));
 
@@ -555,16 +553,21 @@ public class TaskManager {
             String taskStatus = task.isComplete ? "[Complete]" : "[Incomplete]";
             String taskLabel = "Task " + (char) ('A' + i); // Convert index to Task A, Task B, etc.
 
-            // Handle dependencies safely
-            String dependencies = task.dependencies.isEmpty() ? "" : " (Depends on " + task.dependencies.stream()
-                    .filter(dep -> dep > 0 && dep <= tasks.size()) // Validate dependency indices
-                    .map(dep -> "Task " + (char) ('A' + dep - 1)) // Convert dependency indices to Task labels
-                    .collect(Collectors.joining(", ")) + ")";
-
-            // Display task details with more context
-            System.out.printf("%d. %s %s: %s - Due: %s - Priority: %s - Category: %s%s%n",
+            // Base task details without dependency information
+            String taskInfo = String.format("%d. %s %s: %s - Due: %s - Priority: %s - Category: %s",
                     i + 1, taskStatus, taskLabel, task.getTitle(), task.getDueDate(),
-                    task.getPriority(), task.getCategory(), dependencies);
+                    task.getPriority(), task.getCategory());
+
+            // Check if dependencies exist
+            if (!task.dependencies.isEmpty()) {
+                String dependencies = task.dependencies.stream()
+                        .map(dep -> "Task " + (char) ('A' + dep - 1)) // Convert dependency indices to Task A, Task B, etc.
+                        .collect(Collectors.joining(", "));
+                taskInfo += " (Depends on " + dependencies + ")";
+            }
+
+            // Print the task information
+            System.out.println(taskInfo);
         }
     }
 }
