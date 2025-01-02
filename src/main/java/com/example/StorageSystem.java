@@ -1,6 +1,5 @@
 package com.example;
-
-import com.example.Task;
+import com.example.GeneralTask;
 import java.io.*;
 import java.nio.file.*;
 import java.time.LocalDate;
@@ -8,130 +7,145 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class StorageSystem {
-    // File path for storing the tasks in CSV format
-    static final String CSV_FILE = "To-Do-List-App.csv";
-
-    // List to store tasks
-    private static List<Task> tasks = new ArrayList<>();
-    
-    // Retrieve the list of tasks
-    public static List<Task> getTasks() {
-        return tasks;
-    }
-    
-    public static void addTask(Task task) {
-        tasks.add(task);
-    }
-
-    public static void main(String[] args) {
-        // Load tasks from the CSV file
-        loadTasksFromCSV();
-        // You can add tasks here manually or load them from some source
-        saveTasksToCSV();  // Save tasks to CSV file
-    }
-    
-    // Load tasks from the CSV file
-    public static void loadTasksFromCSV() {
-        tasks.clear();  // Clear existing tasks 
-        try (BufferedReader reader = Files.newBufferedReader(Paths.get(CSV_FILE))) {
-            String line;
-            reader.readLine(); // Skip the header line
-
-            while ((line = reader.readLine()) != null) {
-                String[] parts = line.split(",");
-
-                String title = parts[0];
-                String description = parts[1];
-                String dueDate = parts[2];
-                String category = parts[3];
-                String priority = parts[4];
-                boolean completed = Boolean.parseBoolean(parts[5]);
-
-                // Parse dependencies as a List<Integer>
-                List<Integer> dependencies = Arrays.stream(parts[6].split(";"))
-                        .map(Integer::parseInt)
-                        .collect(Collectors.toList());
-                String recurrence = parts[7];
-                String nextCreationDate = parts[8];
-
-                // Create and add the task
-                Task task = new Task(title, description, dueDate, category, priority);
-                task.setComplete(completed);
-                task.setDependencies(dependencies);
-                task.setRecurrence(recurrence);
-                task.setNextCreationDate(nextCreationDate);
-                tasks.add(task);
-            }
-            System.out.println("Tasks successfully loaded from CSV file.");
-            reader.close();  // Close the reader after use
-        } catch (IOException e) {
-            System.err.println("Error loading tasks from CSV file: " + e.getMessage());
-        }
-    }
-    
-    public static void saveTasksToCSV() {
-        try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(CSV_FILE))) {
-            // Writing the header row
-            writer.write("Title,Description,Due Date (YYYY-MM-DD),Category (Homework/ Personal/ Work),Priority Level (low/ medium/ high),Completion Status (complete/ incomplete),Dependencies,Recurrence,Next Creation Date (YYYY-MM-DD)");
-            writer.newLine();
-
-            // Writing tasks data
-            for (Task task : tasks) {
-                writer.write(task.getTitle() + ","
-                        + task.getDescription() + ","
-                        + task.getDueDate() + ","
-                        + task.getCategory() + ","
-                        + task.getPriority() + ","
-                        + (task.isComplete() ? "complete" : "incomplete") + ","
-                        + String.join(";", task.getDependencies().stream().map(String::valueOf).collect(Collectors.toList())) + ","
-                        + task.getRecurrence() + ","
-                        + (task.getNextCreationDate() != null ? task.getNextCreationDate() : ""));
-                writer.newLine();
-            }
-            System.out.println("Tasks successfully saved to CSV file.");
-        } catch (IOException e) {
-            System.out.println("Error saving tasks to CSV file: " + e.getMessage());
-        }
-    }
-    
-    // Example of a Task class to represent tasks (You may modify it as needed)
-    static class Task {
+    public static class StorageTask extends GeneralTask{
         private String title;
         private String description;
         private String dueDate;
         private String category;
         private String priority;
-        private boolean isComplete;
-        private List<Integer> dependencies;
-        private String recurrence;
-        private String nextCreationDate;
 
         // Constructor
-        public Task(String title, String description, String dueDate, String category, String priority) {
-            this.title = title;
-            this.description = description;
-            this.dueDate = dueDate;
-            this.category = category;
-            this.priority = priority;
-            this.isComplete = false;
-            this.dependencies = new ArrayList<>();
-            this.recurrence = "";
-            this.nextCreationDate = null;
+        public StorageTask(String title, String description, String dueDate, String category, String priority) {
+            super(title, description, dueDate, category, priority);
         }
 
-        // Getters and setters for Task fields
-        public String getTitle() { return title; }
-        public String getDescription() { return description; }
-        public String getDueDate() { return dueDate; }
-        public String getCategory() { return category; }
-        public String getPriority() { return priority; }
-        public boolean isComplete() { return isComplete; }
-        public void setComplete(boolean isComplete) { this.isComplete = isComplete; }
-        public List<Integer> getDependencies() { return dependencies; }
-        public void setDependencies(List<Integer> dependencies) { this.dependencies = dependencies; }
-        public String getRecurrence() { return recurrence; }
-        public void setRecurrence(String recurrence) { this.recurrence = recurrence; }
-        public String getNextCreationDate() { return nextCreationDate; }
-        public void setNextCreationDate(String nextCreationDate) { this.nextCreationDate = nextCreationDate; }
+        // Getters
+        @Override
+        public String getTitle() {
+            return title;
+        }
+
+        @Override
+        public String getDescription() {
+            return description;
+        }
+
+        @Override
+        public String getDueDate() {
+            return dueDate;
+        }
+
+        @Override
+        public String getCategory() {
+            return category;
+        }
+
+        @Override
+        public String getPriority() {
+            return priority;
+        }
+
+        // Setters (optional, if tasks need to be updated)
+        @Override
+        public void setTitle(String title) {
+            this.title = title;
+        }
+
+        @Override
+        public void setDescription(String description) {
+            this.description = description;
+        }
+
+        @Override
+        public void setDueDate(String dueDate) {
+            this.dueDate = dueDate;
+        }
+
+        @Override
+        public void setCategory(String category) {
+            this.category = category;
+        }
+
+        @Override
+        public void setPriority(String priority) {
+            this.priority = priority;
+        }
+
+        // For CSV serialization/deserialization
+        @Override
+        public String toString() {
+            return String.format("%s,%s,%s,%s,%s", title, description, dueDate, category, priority);
+        }
+
+        public static StorageTask fromCSV(String csvLine) {
+            String[] fields = csvLine.split(",", -1); // Ensure all fields are captured
+            return new StorageTask(
+                fields[0], // title
+                fields[1], // description
+                fields[2], // dueDate
+                fields[3], // category
+                fields[4]  // priority
+            );
+        }
+    }
+    // File path for storing the tasks in CSV format
+    private static final String CSV_FILE = "To-Do-List-App.csv";
+
+    // List to store tasks
+    static List<GeneralTask> tasks = new ArrayList<>();
+    private static List<StorageTask> storageTasks = new ArrayList<>();
+    
+    // Retrieve the list of tasks
+    public static List<GeneralTask> getTasks() {
+        return storageTasks.stream()
+        .map(storageTask -> new GeneralTask(
+            storageTask.getTitle(),
+            storageTask.getDescription(),
+            storageTask.getDueDate(),
+            storageTask.getCategory(),
+            storageTask.getPriority()))
+        .collect(Collectors.toList());
+    }
+    public static List<StorageTask> getStorageTasks() {
+        return storageTasks;
+    }
+
+    
+    public static void addTask(GeneralTask task) {
+        tasks.add(task);
+        System.out.println("Task added to storage.");
+    }
+
+    public static void main(String[] args) {
+        // Load tasks from the CSV file
+        loadTasksFromCSV();
+        // Prompt user for task details via TaskManager
+        TaskManager.addTask();  // Call TaskManager's method to add the task
+        saveTasksToCSV();  // Save tasks to CSV file
+    }
+    
+    // Load tasks from CSV file
+    public static void loadTasksFromCSV() {
+        tasks.clear();
+        try (BufferedReader reader = new BufferedReader(new FileReader(CSV_FILE))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                tasks.add(GeneralTask.fromCSV(line));
+            }
+        } catch (IOException e) {
+            System.err.println("Error reading tasks from file: " + e.getMessage());
+        }
+    }
+    
+    // Save tasks to CSV file
+    public static void saveTasksToCSV() {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(CSV_FILE))) {
+            for (GeneralTask task : tasks) {
+                writer.write(task.toCSVFormat());
+                writer.newLine();
+            }
+        } catch (IOException e) {
+            System.err.println("Error writing tasks to file: " + e.getMessage());
+        }
     }
 }

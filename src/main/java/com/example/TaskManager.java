@@ -1,5 +1,4 @@
 package com.example;
-
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -11,7 +10,7 @@ import java.util.HashSet;
 import java.util.stream.Collectors;
 
 public class TaskManager {
-    static List<Task> tasks = new ArrayList<>();
+    static List<GeneralTask> tasks = new ArrayList<>();
     static Scanner scanner = new Scanner(System.in);
     static LocalDate lastGenerationDate = LocalDate.of(2000, 1, 1); //Initialize to a past date
     static DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -71,7 +70,7 @@ public class TaskManager {
         }
     }
 
-    private static void addTask() {
+    public static void addTask() {
         System.out.println("\n=== Add a New Task ===");
         System.out.print("Enter task title: ");
         String title = scanner.nextLine();
@@ -84,8 +83,9 @@ public class TaskManager {
         System.out.print("Enter priority level (Low, Medium, High): ");
         String priority = scanner.nextLine();
 
-        Task task = new Task(title, description, dueDate, category, priority);
-        tasks.add(task);
+        GeneralTask newTask = new GeneralTask(title, description, dueDate, category, priority);
+        StorageSystem.addTask(newTask);
+        StorageSystem.saveTasksToCSV();
         System.out.println("\nTask \"" + title + "\" added successfully!");
     }
 
@@ -96,7 +96,7 @@ public class TaskManager {
         System.out.println();
         
         if (taskId >= 1 && taskId <= tasks.size()) {
-            Task task = tasks.get(taskId - 1);
+            GeneralTask task = tasks.get(taskId - 1);
             boolean canMarkComplete = true;
          
             for (Integer dep : task.dependencies) {
@@ -125,10 +125,10 @@ public class TaskManager {
         
         if (taskId >= 1 && taskId <= tasks.size()) {
             // Remove dependencies from other tasks
-            for (Task t : tasks) {
+            for (GeneralTask t : tasks) {
                 t.dependencies.remove(Integer.valueOf(taskId));
             }
-            Task task = tasks.remove(taskId - 1);
+            GeneralTask task = tasks.remove(taskId - 1);
             System.out.println("Task \"" + task.title + "\" deleted successfully!");
             // Update dependencies of remaining tasks
             for (int i = 0; i < tasks.size(); i++) {
@@ -189,7 +189,7 @@ public class TaskManager {
         System.out.println("\n=== Search Results ===");
         boolean found = false;
         for (int i = 0; i < tasks.size(); i++) {
-            Task task = tasks.get(i);
+            GeneralTask task = tasks.get(i);
             if (task.getTitle().toLowerCase().contains(keyword) ||
                 task.getDescription().toLowerCase().contains(keyword)) {
                
@@ -215,8 +215,8 @@ public class TaskManager {
             return;
         }
         LocalDate initialDueDate = LocalDate.now();
-
-        Task task = new Task(title, description, initialDueDate.format(dateFormatter), recurrence);
+        
+        GeneralTask task = new GeneralTask(title, description, initialDueDate.format(dateFormatter), recurrence);
      
         if (task.nextCreationDate != null) {
             tasks.add(task);
@@ -230,15 +230,15 @@ public class TaskManager {
             return; // Don't generate tasks more than once a day
         }
 
-        List<Task> newTasks = new ArrayList<>();
+        List<GeneralTask> newTasks = new ArrayList<>();
         Set<String> existingTasks = new HashSet<>();
 
         // Collect already existing tasks in the set to check for duplicates
-        for (Task task : tasks) {
+        for (GeneralTask task : tasks) {
             existingTasks.add(task.title + task.nextCreationDate.toString());
         }
 
-        for (Task task : tasks) {
+        for (GeneralTask task : tasks) {
             if (!task.recurrence.isEmpty()) {
                 LocalDate nextDueDate = task.getNextDueDate();
 
@@ -246,7 +246,7 @@ public class TaskManager {
                 while (!nextDueDate.isAfter(today)) {
                     if (!existingTasks.contains(task.title + nextDueDate.toString())) {
                         // Create new task for the next due date
-                        Task newTask = new Task(task.title, task.description, nextDueDate.format(dateFormatter), task.recurrence);
+                        GeneralTask newTask = new GeneralTask(task.title, task.description, nextDueDate.format(dateFormatter), task.recurrence);
                         newTasks.add(newTask);
                         existingTasks.add(task.title + nextDueDate.toString()); // Mark this task as existing
                     }
@@ -352,7 +352,7 @@ public class TaskManager {
             System.out.println("Invalid task number.");
             return;
         }
-        Task task = tasks.get(taskNumber - 1);
+        GeneralTask task = tasks.get(taskNumber - 1);
         System.out.println("\nWhat would you like to edit?");
         System.out.println("1. Title");
         System.out.println("2. Description");
@@ -418,7 +418,7 @@ public class TaskManager {
         System.out.println("\n=== View All Tasks ===");
         generateRecurringTasks();
         for (int i = 0; i < tasks.size(); i++) {
-         Task task = tasks.get(i);
+         GeneralTask task = tasks.get(i);
          String taskStatus = task.isComplete ? "[Complete]" : "[Incomplete]";
          String taskLabel = "Task " + (char)('A' + i); // Convert index to Task A, Task B, etc.
          String dependencies = task.dependencies.isEmpty() ? "" : " (Depends on " + task.dependencies.stream()
