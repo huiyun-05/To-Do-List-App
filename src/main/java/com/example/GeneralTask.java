@@ -16,15 +16,31 @@ public class GeneralTask {
     protected List<Integer> dependencies; 
     protected String recurrence; // daily, weekly, monthly
     protected LocalDate nextCreationDate;
+    
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    
+    public static LocalDate parseDate(String date) {
+        return LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+    }
 
     public GeneralTask(String title, String description, String dueDate, String category, String priority) {
         this.title = title;
         this.description = description;
         this.dueDate = dueDate;
-        this.isComplete = false;
         this.category = category;
         this.priority = priority;
-        this.dependencies = new ArrayList<>();
+    }
+    
+    public GeneralTask(String title, String description, String dueDate, String category, String priority, boolean isComplete, List<Integer> dependencies, String recurrence, LocalDate nextCreationDate) {
+        this.title = title;
+        this.description = description;
+        this.dueDate = dueDate;
+        this.category = category;
+        this.priority = priority;
+        this.isComplete = isComplete;
+        this.dependencies = dependencies;
+        this.recurrence = recurrence;
+        this.nextCreationDate = nextCreationDate;
     }
     
     public GeneralTask(String title, String description, String nextCreationDate, String recurrence) {
@@ -142,14 +158,28 @@ public class GeneralTask {
         isComplete = false;
     }
 
+    // Convert GeneralTask to a CSV-compatible string
+    @Override
     public String toString() {
-        return (isComplete ? "[Complete] " : "[Incomplete] ") + title + " - Due: " + dueDate + " - Category: " + category + " - Priority: " + priority;
+        String dependenciesString = dependencies == null ? "" : String.join(";", dependencies.stream().map(String::valueOf).toArray(String[]::new));
+        String nextDateString = nextCreationDate == null ? "" : nextCreationDate.toString();
+        return String.format("%s,%s,%s,%s,%s,%b,%s,%s,%s", 
+            title, 
+            description, 
+            dueDate, 
+            category, 
+            priority, 
+            isComplete, 
+            dependenciesString, 
+            recurrence, 
+            nextDateString
+        );
     }
     
     public void toggleCompleted() {
-    this.isComplete = !this.isComplete;
-    // Call StorageSystem to save updated task list after toggling completion
-    StorageSystem.saveTasksToCSV();  // Ensure that save method is called here
+        this.isComplete = !this.isComplete;
+        // Call StorageSystem to save updated task list after toggling completion
+        StorageSystem.saveTasksToCSV();  // Ensure that save method is called here
     }
     // Method to convert Task to CSV format
     public String toCSVFormat() {
@@ -164,25 +194,27 @@ public class GeneralTask {
            (nextCreationDate != null ? nextCreationDate : "");
     }
     
-    // CSV Deserialization Method
+    // Factory method to create a GeneralTask from a CSV line
     public static GeneralTask fromCSV(String csvLine) {
-        String[] fields = csvLine.split(",", -1);
-        GeneralTask task = new GeneralTask(fields[0], fields[1], fields[2], fields[3], fields[4]);
-        task.setComplete(Boolean.parseBoolean(fields[5]));
+        String[] fields = csvLine.split(",", -1); // Handle empty fields gracefully
+        String title = fields[0];
+        String description = fields[1];
+        String dueDate = fields[2];
+        String category = fields[3];
+        String priority = fields[4];
+        boolean isComplete = Boolean.parseBoolean(fields[5]);
+        List<Integer> dependencies = parseDependencies(fields[6]); // Convert dependency string to List<Integer>
+        String recurrence = fields[7];
+        LocalDate nextCreationDate = fields[8].isEmpty() ? null : LocalDate.parse(fields[8]);
         
-        if (!fields[6].isEmpty()) {
-            List<Integer> deps = new ArrayList<>();
-            for (String dep : fields[6].split(";")) {
-                deps.add(Integer.parseInt(dep));
-            }
-            task.setDependencies(deps);
+        return new GeneralTask(title, description, dueDate, category, priority, isComplete, dependencies, recurrence, nextCreationDate);
+    }
+    // Helper to parse dependencies
+    private static List<Integer> parseDependencies(String dependencyString) {
+        if (dependencyString == null || dependencyString.isEmpty()) {
+            return List.of();
         }
-        
-        task.setRecurrence(fields[7]);
-        if (!fields[8].isEmpty()) {
-            task.setNextCreationDate(LocalDate.parse(fields[8]));
-        }
-        
-        return task;
+        String[] depArray = dependencyString.split(";");
+        return List.of(depArray).stream().map(Integer::parseInt).toList();
     }
 }
