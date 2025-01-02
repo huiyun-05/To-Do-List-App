@@ -29,6 +29,7 @@ public class GeneralTask {
         this.dueDate = dueDate;
         this.category = category;
         this.priority = priority;
+        this.dependencies = new ArrayList<>();
     }
     
     public GeneralTask(String title, String description, String dueDate, String category, String priority, boolean isComplete, List<Integer> dependencies, String recurrence, LocalDate nextCreationDate) {
@@ -38,14 +39,14 @@ public class GeneralTask {
         this.category = category;
         this.priority = priority;
         this.isComplete = isComplete;
-        this.dependencies = dependencies;
+        this.dependencies = (dependencies != null) ? dependencies : new ArrayList<>();
         this.recurrence = recurrence;
         this.nextCreationDate = nextCreationDate;
     }
     
     public GeneralTask(String title, String description, String nextCreationDate, String recurrence) {
         try {
-            this.nextCreationDate = LocalDate.parse(nextCreationDate, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            this.nextCreationDate = parseDate(nextCreationDate);
         } catch (DateTimeParseException e) {
             System.out.println("Invalid date format. Please use YYYY-MM-DD.");
             return;
@@ -161,7 +162,7 @@ public class GeneralTask {
     // Convert GeneralTask to a CSV-compatible string
     @Override
     public String toString() {
-        String dependenciesString = dependencies == null ? "" : String.join(";", dependencies.stream().map(String::valueOf).toArray(String[]::new));
+        String dependenciesString = String.join(";", dependencies.stream().map(String::valueOf).toArray(String[]::new));
         String nextDateString = nextCreationDate == null ? "" : nextCreationDate.toString();
         return String.format("%s,%s,%s,%s,%s,%b,%s,%s,%s", 
             title, 
@@ -203,7 +204,7 @@ public class GeneralTask {
         String category = fields[3];
         String priority = fields[4];
         boolean isComplete = Boolean.parseBoolean(fields[5]);
-        List<Integer> dependencies = parseDependencies(fields[6]); // Convert dependency string to List<Integer>
+        List<Integer> dependencies = parseDependencies(fields[6].isEmpty() ? null : fields[6]);// Convert dependency string to List<Integer>
         String recurrence = fields[7];
         LocalDate nextCreationDate = fields[8].isEmpty() ? null : LocalDate.parse(fields[8]);
         
