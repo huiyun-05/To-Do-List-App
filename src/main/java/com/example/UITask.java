@@ -241,7 +241,9 @@ public class UITask {
                 completeButton.setStyle("-fx-background-color: transparent;");
                 completeButton.setOnAction(e -> {
                     task.toggleCompleted();
+                    System.out.println("Task completed: "+task.isCompleted());
                     updateItem(task, false); // Update task display
+                    uiTask.saveTasks();
                 });
 
                 // "Delete" image button
