@@ -305,7 +305,7 @@ public class StorageSystem {
                 String[] taskData = line.split(",");
                 System.out.println(Arrays.toString(taskData));  // This will print the array for each row
                 // Check if there are enough columns in the line
-                if (taskData.length == 9) {  // Ensure the correct number of fields
+                if (taskData.length >= 6) {  // Check if there are at least 6 fields
                     String title = taskData[0];
                     String description = taskData[1];
                     String dueDate = taskData[2];
