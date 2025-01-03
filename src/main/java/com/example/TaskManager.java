@@ -6,12 +6,14 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.InputMismatchException;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class TaskManager {
@@ -638,18 +640,18 @@ public class TaskManager {
         // Load tasks from CSV before viewing
         loadTasksFromCSV();
 
-        if (tasks.isEmpty()) {
+        if (StorageSystem.storageTasks.isEmpty()) {
             System.out.println("\nNo tasks available!");
             return;
         }
 
         // Sort tasks by due date before displaying
-        tasks.sort(Comparator.comparing(GeneralTask::getDueDate));
+        StorageSystem.storageTasks.sort(Comparator.comparing(StorageTask::getDueDate, Comparator.nullsLast(Comparator.naturalOrder())));
 
         System.out.println("\n=== View All Tasks ===");
-        for (int i = 0; i < tasks.size(); i++) {
-            GeneralTask task = tasks.get(i);
-            String taskStatus = task.isComplete ? "[Complete]" : "[Incomplete]";
+        for (int i = 0; i < StorageSystem.storageTasks.size(); i++) {
+            StorageTask task = StorageSystem.storageTasks.get(i);
+            String taskStatus = task.getIsComplete().equalsIgnoreCase("complete") ? "[Complete]" : "[Incomplete]";
             String taskLabel = "Task " + (char) ('A' + i); // Convert index to Task A, Task B, etc.
 
             // Base task details without dependency information
@@ -657,13 +659,16 @@ public class TaskManager {
                     i + 1, taskStatus, taskLabel, task.getTitle(), task.getDueDate(),
                     task.getPriority(), task.getCategory());
 
-            // Check if dependencies exist
-            if (!task.dependencies.isEmpty()) {
-                String dependencies = task.dependencies.stream()
-                        .map(dep -> "Task " + (char) ('A' + dep - 1)) // Convert dependency indices to Task A, Task B, etc.
-                        .collect(Collectors.joining(", "));
-                taskInfo += " (Depends on " + dependencies + ")";
-            }
+            // Handle dependencies if they exist (task.getDependencies() should be a List<Integer>)
+        List<Integer> dependencies = task.getDependencies(); // List<Integer> directly
+
+        // Display dependencies if there are any
+        if (dependencies != null && !dependencies.isEmpty()) {
+            String dependenciesText = dependencies.stream()
+                    .map(dep -> "Task " + (char) ('A' + dep - 1)) // Convert dependency indices to Task A, Task B, etc.
+                    .collect(Collectors.joining(", "));
+            taskInfo += " (Depends on " + dependenciesText + ")";
+        }
 
             // Print the task information
             System.out.println(taskInfo);
