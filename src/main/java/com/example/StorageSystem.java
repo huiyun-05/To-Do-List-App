@@ -1,6 +1,6 @@
 package com.example;
 import com.example.GeneralTask;
-import static com.example.StorageSystem.StorageTask.parseDependencies;
+import static com.example.GeneralTask.parseNextCreationDate;
 import java.io.*;
 import java.nio.file.*;
 import java.time.LocalDate;
@@ -38,19 +38,36 @@ public class StorageSystem {
                 parseNextCreationDate(nextCreationDateStr)
             );
 
-            this.title = title;
-            this.description = description;
-            this.dueDate = dueDate;
-            this.category = category;
-            this.priority = priority;
             this.isComplete = isCompleteStr;
             this.dependencies = dependenciesStr;
-            this.recurrence = recurrence;
             this.nextCreationDate = nextCreationDateStr;
         }
         
         public StorageTask(String title, String description, String dueDate, String category, String priority) {
             super(title, description, dueDate, category, priority); // Pass to parent constructor
+            this.isComplete = "false";
+            this.dependencies = "";
+            this.nextCreationDate = "";
+        }
+
+        // Utility method to parse dependencies from a comma-separated string
+        private static List<Integer> parseDependencies(String dependenciesStr) {
+            List<Integer> dependenciesList = new ArrayList<>();
+            if (dependenciesStr != null && !dependenciesStr.isEmpty()) {
+                String[] deps = dependenciesStr.split(",");
+                for (String dep : deps) {
+                    dependenciesList.add(Integer.parseInt(dep.trim()));  // Add each dependency as an Integer
+                }
+            }
+            return dependenciesList;
+        }
+
+        // Utility method to parse next creation date from a string
+        public static LocalDate parseNextCreationDate(String nextCreationDateStr) {
+            if (nextCreationDateStr != null && !nextCreationDateStr.isEmpty()) {
+                return LocalDate.parse(nextCreationDateStr, DATE_FORMATTER);  // Parse the string into a LocalDate
+            }
+            return null;  // Return null if no next creation date is provided
         }
 
         // Getters
@@ -78,31 +95,25 @@ public class StorageSystem {
         public String getPriority() {
             return priority;
         }
-        
+
         public String getIsComplete() {
             return isComplete;
         }
-        
+
         @Override
         public List<Integer> getDependencies() {
             return parseDependencies(dependencies);
         }
+
         public String getDependenciesAsString() {
             return dependencies;
         }
-        
+
         @Override
         public String getRecurrence() {
             return recurrence;
         }
-        
-        public static LocalDate parseNextCreationDate(String nextCreationDateStr) {
-            if (nextCreationDateStr != null && !nextCreationDateStr.isEmpty()) {
-                return LocalDate.parse(nextCreationDateStr, DateTimeFormatter.ISO_DATE);
-            }
-            return null;
-        }
-        
+
         @Override
         public LocalDate getNextCreationDate() {
             return parseNextCreationDate(nextCreationDate);
@@ -112,7 +123,7 @@ public class StorageSystem {
         public String getNextCreationDateAsString() {
             return nextCreationDate;
         }
-        
+
         // Instance method for parsing dependencies
         public List<Integer> parseDependencies() {
             if (dependencies != null && !dependencies.isEmpty()) {
@@ -120,7 +131,6 @@ public class StorageSystem {
             }
             return new ArrayList<>();
         }
-        
 
         // Setters (optional, if tasks need to be updated)
         @Override
@@ -147,19 +157,19 @@ public class StorageSystem {
         public void setPriority(String priority) {
             this.priority = priority;
         }
-        
+
         public void setIsComplete(String isComplete) {
             this.isComplete = isComplete;
         }
-        
+
         public void setDependencies(String dependencies) {
             this.dependencies = dependencies;
         }
-        
+
         public void setRecurrence(String recurrence) {
             this.recurrence = recurrence;
         }
-        
+
         public void setNextCreationDate(String nextCreationDate) {
             this.nextCreationDate = nextCreationDate;
         }
@@ -199,25 +209,13 @@ public class StorageSystem {
                 nextCreationDate
             );
         }
-        
-        // Helper method to parse the dependencies
-        public static List<Integer> parseDependencies(String dependencyString) {
-            List<Integer> dependencies = new ArrayList<>();
-            if (!dependencyString.isEmpty()) {
-                String[] depArray = dependencyString.split(";");
-                for (String dep : depArray) {
-                    dependencies.add(Integer.parseInt(dep));
-                }
-            }
-            return dependencies;
-        }
     }
     
     // File path for storing the tasks in CSV format
     private static final String CSV_FILE = "To-Do-List-App.csv";
     // List to store tasks
     static List<GeneralTask> tasks = new ArrayList<>();
-    private static List<StorageTask> storageTasks = new ArrayList<>();
+    public static List<StorageTask> storageTasks = new ArrayList<>();
     
     // Retrieve the list of tasks
     public static List<GeneralTask> getTasks() {
@@ -294,26 +292,82 @@ public class StorageSystem {
     
     // Load tasks from CSV file
     public static void loadTasksFromCSV() {
-        tasks.clear();
-        try (BufferedReader reader = new BufferedReader(new FileReader(CSV_FILE))) {
+        storageTasks.clear();  // Clear existing tasks
+
+        try (BufferedReader reader = new BufferedReader(new FileReader("To-Do-List-App.csv"))) {
             String line;
+            reader.readLine();  // Skip the header row
+
             while ((line = reader.readLine()) != null) {
-                tasks.add(GeneralTask.fromCSV(line));
+                String[] taskData = line.split(",");
+                System.out.println(Arrays.toString(taskData));  // This will print the array for each row
+                // Check if there are enough columns in the line
+                if (taskData.length == 9) {  // Ensure the correct number of fields
+                    String title = taskData[0];
+                    String description = taskData[1];
+                    String dueDate = taskData[2];
+                    String category = taskData[3];
+                    String priority = taskData[4];
+                    String isComplete = taskData[5];
+                    String dependencies = taskData.length > 6 ? taskData[6] : "";  // Default empty if missing
+                    String recurrence = taskData.length > 7 ? taskData[7] : "";  // Default empty if missing
+                    String nextCreationDate = taskData.length > 8 ? taskData[8] : "";  // Default empty if missing
+
+                    StorageTask task = new StorageTask(
+                            title, description, dueDate, category, priority,
+                            isComplete, dependencies, recurrence, nextCreationDate
+                    );
+                    StorageSystem.storageTasks.add(task);
+                } else {
+                    System.out.println("Skipping invalid line: " + line);  // Handle invalid lines
+                }
             }
         } catch (IOException e) {
-            System.err.println("Error reading tasks from file: " + e.getMessage());
+            System.out.println("Error reading from CSV: " + e.getMessage());
         }
     }
-    
+
     // Save tasks to CSV file
     public static void saveTasksToCSV() {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(CSV_FILE))) {
-            for (GeneralTask task : tasks) {
-                writer.write(task.toString());
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("To-Do-List-App.csv"))) {
+            // Write the header with the new column
+            writer.write("Title,Description,Due Date (YYYY-MM-DD),Category (Homework/ Personal/ Work),Priority Level (low/ medium/ high),Completion Status (complete/ incomplete),Dependencies,Recurrence,Next Creation Date (YYYY-MM-DD)");
+            writer.newLine();
+
+            // Write each task in CSV format
+            for (StorageTask task : storageTasks) {
+                writer.write(String.join(",",
+                task.getTitle(),
+                task.getDescription(),
+                task.getDueDate(),
+                task.getCategory(),
+                task.getPriority(),
+                task.getIsComplete(),
+                task.getDependenciesAsString(),
+                task.getRecurrence(),
+                task.getNextCreationDateAsString()
+                ));
                 writer.newLine();
             }
         } catch (IOException e) {
-            System.err.println("Error writing tasks to file: " + e.getMessage());
+            System.out.println("Error writing to CSV: " + e.getMessage());
         }
+    }
+    
+    public static List<Integer> parseDependencies(String dependenciesStr) {
+        if (dependenciesStr == null || dependenciesStr.trim().isEmpty()) {
+            return new ArrayList<>();  // Return an empty list for missing dependencies
+        }
+        return Arrays.stream(dependenciesStr.split(";"))
+                .map(dep -> {
+                    try {
+                        return Integer.parseInt(dep);  // Try to parse dependency as integer
+                    } catch (NumberFormatException e) {
+                        System.out.println("Invalid dependency format: " + dep);  // Log the error
+                        return null;  // Skip invalid dependency
+                    }
+                })
+                .filter(Objects::nonNull) // Filter out any null values from invalid dependencies
+                .collect(Collectors.toList());
     }
 }
