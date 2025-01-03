@@ -177,7 +177,6 @@ public class GeneralTask {
     public void toggleCompleted() {
         this.isComplete = !this.isComplete;
         // Call StorageSystem to save updated task list after toggling completion
-        StorageSystem.saveTasksToCSV();  // Ensure that save method is called here
     }
     
     // Method to convert Task to CSV format
