@@ -1,4 +1,5 @@
 package com.example;
+import com.example.StorageSystem.StorageTask;
 import static com.example.StorageSystem.loadTasksFromCSV;
 import static com.example.StorageSystem.saveTasksToCSV;
 import java.time.LocalDate;
@@ -87,34 +88,45 @@ public class TaskManager {
         System.out.print("Enter priority level (Low, Medium, High): ");
         String priority = scanner.nextLine();
         
-        GeneralTask newTask = new GeneralTask(title, description, dueDate, category, priority);
-        tasks.add(newTask);
-        StorageSystem.addTask(newTask);
+        String isComplete = "incomplete";
+        String dependencies = "";
+        String recurrence = "";
+        String nextCreationDate = "";
+        
+        // Create a new StorageTask with null values for the optional fields
+        StorageTask newTask = new StorageTask(
+            title, description, dueDate, category, priority, 
+            isComplete, dependencies, recurrence, nextCreationDate
+        );
+        // Add the new task to the list of tasks
+        StorageSystem.storageTasks.add(newTask);  // Add directly to storageTasks (not GeneralTask)
+        StorageSystem.addTask(newTask);  // Use StorageSystem.addTask to handle storage
+        tasks.add(newTask); //add task into generalTask
+        
         saveTasksToCSV();
         System.out.println("\nTask \"" + title + "\" added successfully!");
     }
 
     private static void markTaskComplete() {
         System.out.println("\n=== Mark Task as Complete ===");
-        System.out.print("Enter the task number you want to mark as complete:");
+        System.out.print("Enter the task number you want to mark as complete: ");
         int taskId = scanner.nextInt();
         System.out.println();
-        
+
         // Load tasks from CSV before proceeding
         loadTasksFromCSV();
-        
-        if (taskId >= 1 && taskId <= tasks.size()) {
-            GeneralTask task = tasks.get(taskId - 1);
+
+        if (taskId >= 1 && taskId <= StorageSystem.storageTasks.size()) {
+            StorageTask task = StorageSystem.storageTasks.get(taskId - 1);
             boolean canMarkComplete = true;
-         
+
             // Check dependencies only if they exist
-            if (task.dependencies != null) {
-                for (Integer dep : task.dependencies) {
-                    if (!tasks.get(dep - 1).isComplete) {
-                        System.out.println("Warning: Task \"" + task.title
-                                + "\" cannot be marked as complete because it depends on \""
-                                + tasks.get(dep - 1).getTitle() + "\". Please complete \""
-                                + tasks.get(dep - 1).getTitle() + "\" first.");
+            if (task.getDependencies() != null && !task.getDependencies().isEmpty()) {
+                for (Integer dep : task.getDependencies()) {
+                    StorageTask depTask = StorageSystem.storageTasks.get(dep - 1);
+                    if (depTask.getIsComplete().equals("incomplete")) {
+                        System.out.println("Warning: Task \"" + task.getTitle()
+                                + "\" cannot be marked as complete because it depends on \"" + depTask.getTitle() + "\". Please complete it first.");
                         canMarkComplete = false;
                         break;
                     }
@@ -122,8 +134,9 @@ public class TaskManager {
             }
 
             if (canMarkComplete) {
-                task.markComplete();
-                System.out.println("Task \"" + task.title + "\" marked as complete!");
+                task.setIsComplete("complete");
+                System.out.println("Task \"" + task.getTitle() + "\" marked as complete!");
+
                 // Save the updated tasks back to CSV
                 saveTasksToCSV();
             }
@@ -244,7 +257,14 @@ public class TaskManager {
             String description = task.getDescription() != null ? task.getDescription().toLowerCase() : "";
 
             if (title.contains(keyword) || description.contains(keyword)) {
-                System.out.println((i + 1) + ". Title: " + task.getTitle() + " | Description: " + task.getDescription());
+                // Format the output with task details
+                String completionStatus = task.isComplete() ? "[Complete]" : "[Incomplete]";
+                String dueDate = task.getDueDate() != null ? task.getDueDate() : "N/A";
+                String category = task.getCategory() != null ? task.getCategory() : "N/A";
+                String priority = task.getPriority() != null ? task.getPriority() : "N/A";
+
+                // Print task in the desired format
+                System.out.println((i + 1) + ". " + completionStatus + " " + task.getTitle() + " - Due: " + dueDate + " - Category: " + category + " - Priority: " + priority);
                 found = true;
             }
         }
