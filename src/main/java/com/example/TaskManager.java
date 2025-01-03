@@ -77,16 +77,53 @@ public class TaskManager {
 
     public static void addTask() {
         System.out.println("\n=== Add a New Task ===");
-        System.out.print("Enter task title: ");
-        String title = scanner.nextLine();
-        System.out.print("Enter task description: ");
-        String description = scanner.nextLine();
-        System.out.print("Enter due date (YYYY-MM-DD): ");
-        String dueDate = scanner.nextLine();
-        System.out.print("Enter task category (Homework, Personal, Work): ");
-        String category = scanner.nextLine();
-        System.out.print("Enter priority level (Low, Medium, High): ");
-        String priority = scanner.nextLine();
+        // Title input
+        String title = "";
+        while (title.isEmpty()) {
+            System.out.print("Enter task title: ");
+            title = scanner.nextLine();
+            if (title.isEmpty()) {
+                System.out.println("Title cannot be empty. Please try again.");
+            }
+        }
+        // Description input
+        String description = "";
+        while (description.isEmpty()) {
+            System.out.print("Enter task description: ");
+            description = scanner.nextLine();
+            if (description.isEmpty()) {
+                System.out.println("Description cannot be empty. Please try again.");
+            }
+        }
+        // Due date input with validation for format (YYYY-MM-DD)
+        String dueDate = "";
+        while (true) {
+            System.out.print("Enter due date (YYYY-MM-DD): ");
+            dueDate = scanner.nextLine();
+            if (dueDate.matches("\\d{4}-\\d{2}-\\d{2}")) {
+                break; // Valid date format, exit the loop
+            } else {
+                System.out.println("Invalid date format. Please use YYYY-MM-DD.");
+            }
+        }
+        // Category input validation
+        String category = "";
+        while (!category.equalsIgnoreCase("Homework") && !category.equalsIgnoreCase("Personal") && !category.equalsIgnoreCase("Work")) {
+            System.out.print("Enter task category (Homework, Personal, Work): ");
+            category = scanner.nextLine();
+            if (!category.equalsIgnoreCase("Homework") && !category.equalsIgnoreCase("Personal") && !category.equalsIgnoreCase("Work")) {
+                System.out.println("Invalid category. Please enter one of the following: Homework, Personal, or Work.");
+            }
+        }
+        // Priority input validation
+        String priority = "";
+        while (!priority.equalsIgnoreCase("Low") && !priority.equalsIgnoreCase("Medium") && !priority.equalsIgnoreCase("High")) {
+            System.out.print("Enter priority level (Low, Medium, High): ");
+            priority = scanner.nextLine();
+            if (!priority.equalsIgnoreCase("Low") && !priority.equalsIgnoreCase("Medium") && !priority.equalsIgnoreCase("High")) {
+                System.out.println("Invalid priority level. Please enter one of the following: Low, Medium, or High.");
+            }
+        }
         
         String isComplete = "incomplete";
         String dependencies = "";
@@ -153,27 +190,28 @@ public class TaskManager {
         // Load tasks from CSV before proceeding
         loadTasksFromCSV();
         
-        if (taskId >= 1 && taskId <= tasks.size()) {
+        if (taskId >= 1 && taskId <= StorageSystem.storageTasks.size()) {
             // Remove dependencies from other tasks
-            for (GeneralTask t : tasks) {
-                if (t.dependencies != null) {
-                    t.dependencies.remove(Integer.valueOf(taskId));
+            for (StorageTask t : StorageSystem.storageTasks) {
+                if (t.getDependencies() != null) {
+                    t.getDependencies().remove(Integer.valueOf(taskId));
                 }
             }
-            GeneralTask task = tasks.remove(taskId - 1);
+            // Delete the task from storageTasks
+            StorageTask task = StorageSystem.storageTasks.remove(taskId - 1);
             System.out.println("Task \"" + task.title + "\" deleted successfully!");
             // Update dependencies of remaining tasks
-            for (int i = 0; i < tasks.size(); i++) {
-                task = tasks.get(i);
+            for (int i = 0; i < StorageSystem.storageTasks.size(); i++) {
+                task = StorageSystem.storageTasks.get(i);
 
-                if (task.dependencies != null) {
+                if (task.getDependencies() != null) {
                     // Remove references to the deleted task
-                    task.dependencies.removeIf(dep -> dep == taskId);
+                    task.getDependencies().removeIf(dep -> dep == taskId);
 
                     // Adjust indices of dependencies greater than the deleted task ID
-                    for (int j = 0; j < task.dependencies.size(); j++) {
-                        if (task.dependencies.get(j) > taskId) {
-                            task.dependencies.set(j, task.dependencies.get(j) - 1);
+                    for (int j = 0; j < task.getDependencies().size(); j++) {
+                        if (task.getDependencies().get(j) > taskId) {
+                            task.getDependencies().set(j, task.getDependencies().get(j) - 1);
                         }
                     }
                 }
@@ -206,26 +244,34 @@ public class TaskManager {
         // Load tasks from CSV before sorting
         loadTasksFromCSV();
 
-        if (tasks.isEmpty()) {
+        if (StorageSystem.storageTasks.isEmpty()) {
             System.out.println("No tasks available to sort.");
             return;
         }
 
         switch (choice) {
             case 1:
-                tasks.sort(Comparator.comparing(task -> task.dueDate, Comparator.nullsLast(Comparator.naturalOrder())));
+                StorageSystem.storageTasks.sort(Comparator.comparing(task -> task.dueDate, Comparator.nullsLast(Comparator.naturalOrder())));
                 System.out.println("Tasks sorted by Due Date (Ascending)!");
                 break;
             case 2:
-                tasks.sort(Comparator.comparing(task -> task.dueDate, Comparator.nullsLast(Comparator.reverseOrder())));
+                StorageSystem.storageTasks.sort(Comparator.comparing(task -> task.dueDate, Comparator.nullsLast(Comparator.reverseOrder())));
                 System.out.println("Tasks sorted by Due Date (Descending)!");
                 break;
             case 3:
-                tasks.sort(Comparator.comparing(task -> task.priority, Comparator.nullsLast(Comparator.reverseOrder())));
+                StorageSystem.storageTasks.sort((o1, o2) -> {
+                    StorageTask task1 = (StorageTask) o1;
+                    StorageTask task2 = (StorageTask) o2;
+                    return Integer.compare(getPriorityValue(task2.getPriority()), getPriorityValue(task1.getPriority()));
+                });
                 System.out.println("Tasks sorted by Priority (High to Low)!");
                 break;
             case 4:
-                tasks.sort(Comparator.comparing(task -> task.priority, Comparator.nullsLast(Comparator.naturalOrder())));
+                StorageSystem.storageTasks.sort((o1, o2) -> {
+                    StorageTask task1 = (StorageTask) o1;
+                    StorageTask task2 = (StorageTask) o2;
+                    return Integer.compare(getPriorityValue(task1.getPriority()), getPriorityValue(task2.getPriority()));
+                });
                 System.out.println("Tasks sorted by Priority (Low to High)!");
                 break;
             default:
@@ -233,6 +279,19 @@ public class TaskManager {
         }
         // Save the updated tasks back to CSV after sorting
         saveTasksToCSV();
+    }
+    
+    private static int getPriorityValue(String priority) {
+        switch (priority.toLowerCase()) {
+            case "low":
+                return 1;
+            case "medium":
+                return 2;
+            case "high":
+                return 3;
+            default:
+                return 0; // Unknown priority
+        }
     }
     
     private static void searchTasks() {
