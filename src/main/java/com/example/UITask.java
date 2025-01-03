@@ -1,108 +1,58 @@
 package com.example;
+import com.example.GeneralTask;
 import com.example.StorageSystem;
 import com.example.StorageSystem.StorageTask;
-import com.example.GeneralTask;
-import java.util.ArrayList;
-import java.util.List;
-import javafx.application.Application;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.geometry.Insets;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.layout.*;
+import javafx.geometry.Insets;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
-import javafx.stage.Stage;
-import java.util.Optional;
-import static javafx.application.Application.launch;
 
-public class UITask extends Application {
-    
-    public static List<Task> convertTasks(List<StorageTask> storageTasks) {
-        List<Task> appTasks = new ArrayList<>();
-        for (StorageTask storageTask : storageTasks) {
-            appTasks.add(new Task(
-                storageTask.getTitle(),
-                storageTask.getDescription(),
-                storageTask.getDueDate(),
-                storageTask.getCategory(),
-                storageTask.getPriority()
-            ));
-        }
-        return appTasks;
+public class UITask {
+
+    private ObservableList<Task> taskList = FXCollections.observableArrayList();
+
+    // Constructor: Load tasks from StorageSystem
+    public UITask() {
+        loadTasks();
     }
 
-    private ObservableList<UITask.Task> tasks = FXCollections.observableArrayList();
-    private ListView<UITask.Task> taskListView = new ListView<>();
+    // Get the ObservableList for the GUI
+    public ObservableList<UITask.Task> getTaskList() {
+        return taskList;
+    }
 
-    @Override
-    public void start(Stage primaryStage) {
-        // Load tasks from the CSV file when the application starts
-        StorageSystem.loadTasksFromCSV();  // Load tasks from CSV into StorageSystem
-        tasks.setAll(FXCollections.observableArrayList(convertTasks(StorageSystem.getStorageTasks())));
-        
-        primaryStage.setTitle("To-Do List App");
+    // Load tasks from StorageSystem
+    public void loadTasks() {
+        List<StorageTask> storageTasks = StorageSystem.getStorageTasks();
+        taskList.setAll(convertStorageTasksToTasks(storageTasks));
+    }
 
-        // Task List View
-        taskListView.setItems(tasks);
-        taskListView.setCellFactory(param -> new TaskCell());
-
-        // Add Task Button
-        Button addButton = new Button("Add Task");
-        addButton.setOnAction(e -> addTask());
-
-        // Sort Buttons
-        Button sortByDueDateAscButton = new Button("Sort by Due Date (Ascending)");
-        Button sortByDueDateDescButton = new Button("Sort by Due Date (Descending)");
-        Button sortByPriorityAscButton = new Button("Sort by Priority (Low to High)");
-        Button sortByPriorityDescButton = new Button("Sort by Priority (High to Low)");
-
-        // Set actions for sorting
-        sortByDueDateAscButton.setOnAction(e -> sortTasks("dueDate", true));
-        sortByDueDateDescButton.setOnAction(e -> sortTasks("dueDate", false));
-        sortByPriorityAscButton.setOnAction(e -> sortTasks("priority", true));
-        sortByPriorityDescButton.setOnAction(e -> sortTasks("priority", false));
-
-        // Layout
-        HBox inputLayout = new HBox(10, addButton);
-        VBox controlLayout = new VBox(10, inputLayout, sortByDueDateAscButton, sortByDueDateDescButton, sortByPriorityAscButton, sortByPriorityDescButton);
-        HBox root = new HBox(10, controlLayout, taskListView);
-
-        VBox.setMargin(taskListView, new Insets(10, 0, 0, 0));
-        root.setPadding(new Insets(10));
-
-        Scene scene = new Scene(root, 600, 400);
-        primaryStage.setScene(scene);
-        primaryStage.show();
+    // Save tasks to StorageSystem
+    public void saveTasks() {
+        List<StorageTask> storageTasks = convertTasksToStorageTasks(taskList);
+        StorageSystem.setStorageTasks(storageTasks);
+        StorageSystem.saveTasksToCSV();
     }
     
-    public static void main(String[] args) {
-        launch(args);
+    public void removeTask(Task task) {
+        taskList.remove(task);
+        saveTasks();  // Save the tasks to the CSV after removal
     }
-    
-    // Inside TodoListApp class, a conversion method
-    private StorageTask convertToStorageSystemTask(UITask.Task task) {
-        // Assuming StorageSystem.Task has a similar constructor
-        return new StorageTask(
-                task.getTitle(),
-                task.getDescription(),
-                task.getDueDate(),
-                task.getCategory(),
-                task.getPriority()
-        );
-    }
-    
-    // Add task to the list
-    private void addTask() {
-        // Create a dialog box for adding a task
+
+    // Add a new task
+    public void addTask() {
         Dialog<ButtonType> dialog = new Dialog<>();
         dialog.setTitle("Add New Task");
 
-        // Set the dialog layout
+        // Dialog layout
         VBox dialogLayout = new VBox(10);
         dialogLayout.setPadding(new Insets(10));
 
@@ -129,53 +79,43 @@ public class UITask extends Application {
 
         dialog.getDialogPane().setContent(dialogLayout);
 
-        // Add "OK" and "Cancel" buttons
         ButtonType okButtonType = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
         ButtonType cancelButtonType = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
         dialog.getDialogPane().getButtonTypes().addAll(okButtonType, cancelButtonType);
-        // Handle the result
+
         Optional<ButtonType> result = dialog.showAndWait();
         if (result.isPresent() && result.get() == okButtonType) {
-            // Create a Task object using the entered data
             String title = titleField.getText();
             String description = descriptionField.getText();
             String dueDate = (dueDatePicker.getValue() != null) ? dueDatePicker.getValue().toString() : "";
             String category = categoryBox.getValue();
             String priority = priorityBox.getValue();
 
-            // Create and add the new task
             Task newTask = new Task(title, description, dueDate, category, priority);
-            StorageTask storageTask = convertToStorageSystemTask(newTask); // Convert to StorageTask
-            StorageSystem.getStorageTasks().add(storageTask); // Add the converted StorageTask to the list
-            StorageSystem.addTask(convertToStorageSystemTask(newTask)); // Add to StorageSystem to persist the task
-            StorageSystem.saveTasksToCSV(); // Save the updated task list to the CSV
-            tasks.setAll(FXCollections.observableArrayList(convertTasks(StorageSystem.getStorageTasks()))); // Refresh ListView // Refresh ListView
+            taskList.add(newTask);
+            saveTasks();
         }
     }
 
-    // Sort tasks based on ascending or descending order for the specified field
-    private void sortTasks(String criteria, boolean ascending) {
-        switch (criteria) {
-            case "dueDate":
-                tasks.sort((t1, t2) -> {
-                    if (ascending) {
-                        return t1.getDueDate().compareTo(t2.getDueDate());
-                    } else {
-                        return t2.getDueDate().compareTo(t1.getDueDate());
-                    }
-                });
-                break;
-            case "priority":
-                tasks.sort((t1, t2) -> {
-                    int priority1 = changePriorityToValue(t1.getPriority());
-                    int priority2 = changePriorityToValue(t2.getPriority());
-                    return ascending ? Integer.compare(priority1, priority2) : Integer.compare(priority2, priority1);
-                });
-                break;
+    // Sort tasks
+    public void sortTasks(String criteria, boolean ascending) {
+        Comparator<Task> comparator = null;
+        if ("dueDate".equals(criteria)) {
+            comparator = Comparator.comparing(Task::getDueDate);
+        } else if ("priority".equals(criteria)) {
+            comparator = Comparator.comparingInt(task -> priorityToValue(task.getPriority()));
+        }
+
+        if (comparator != null) {
+            if (!ascending) {
+                comparator = comparator.reversed();
+            }
+            FXCollections.sort(taskList, comparator);
         }
     }
 
-    private int changePriorityToValue(String priority) {
+    // Convert priority string to numeric value for sorting
+    private int priorityToValue(String priority) {
         switch (priority) {
             case "Low":
                 return 1;
@@ -184,92 +124,114 @@ public class UITask extends Application {
             case "High":
                 return 3;
             default:
-                return 0; // Default for undefined priorities
+                return 0;
         }
     }
 
-    // Task class representing each task
+    // Convert StorageTask to Task
+    private List<Task> convertStorageTasksToTasks(List<StorageTask> storageTasks) {
+        List<Task> tasks = new ArrayList<>();
+        for (StorageTask st : storageTasks) {
+            tasks.add(new Task(st.getTitle(), st.getDescription(), st.getDueDate(), st.getCategory(), st.getPriority()));
+        }
+        return tasks;
+    }
+
+    // Convert Task to StorageTask
+    private List<StorageTask> convertTasksToStorageTasks(List<Task> tasks) {
+        List<StorageTask> storageTasks = new ArrayList<>();
+        for (Task t : tasks) {
+            storageTasks.add(new StorageTask(t.getTitle(), t.getDescription(), t.getDueDate(), t.getCategory(), t.getPriority()));
+        }
+        return storageTasks;
+    }
+
+    // Inner Task class
     public static class Task {
-        private final SimpleStringProperty title;
-        private final SimpleStringProperty description;
-        private final SimpleStringProperty dueDate;
-        private final SimpleStringProperty category;
-        private final SimpleStringProperty priority;
-        private final SimpleBooleanProperty completed;
+        private String title;
+        private String description;
+        private String dueDate;
+        private String category;
+        private String priority;
+        private boolean completed;
 
         public Task(String title, String description, String dueDate, String category, String priority) {
-            this.title = new SimpleStringProperty(title);
-            this.description = new SimpleStringProperty(description);
-            this.dueDate = new SimpleStringProperty(dueDate);
-            this.category = new SimpleStringProperty(category);
-            this.priority = new SimpleStringProperty(priority);
-            this.completed = new SimpleBooleanProperty(false);
+            this.title = title;
+            this.description = description;
+            this.dueDate = dueDate;
+            this.category = category;
+            this.priority = priority;
+            this.completed = false;
         }
 
-        // Accessor for each field
         public String getTitle() {
-            return title.get();
+            return title;
         }
 
         public String getDescription() {
-            return description.get();
+            return description;
         }
 
         public String getDueDate() {
-            return dueDate.get();
+            return dueDate;
         }
 
         public String getCategory() {
-            return category.get();
+            return category;
         }
 
         public String getPriority() {
-            return priority.get();
+            return priority;
         }
-
-        public boolean isCompleted() {
-            return completed.get();
-        }
-
+        
         public void toggleCompleted() {
-            this.completed.set(!this.completed.get());
+            this.completed = !this.completed;
+        }
+        
+        public boolean isCompleted() {
+            return completed;
         }
     }
 
-    // Custom ListCell to display tasks
-    private class TaskCell extends ListCell<UITask.Task> {
+    // Custom ListCell for displaying tasks
+    public static class TaskCell extends ListCell<UITask.Task> {
+        private UITask uiTask;
+
+        public TaskCell(UITask uiTask) {
+            this.uiTask = uiTask;  // Pass the UITask instance to the cell
+        }
+        
         @Override
         protected void updateItem(UITask.Task task, boolean empty) {
             super.updateItem(task, empty);
             if (empty || task == null) {
-                setText(null);
                 setGraphic(null);
             } else {
                 VBox taskBox = new VBox(5);
                 HBox taskRow = new HBox(10);
                 taskRow.setSpacing(10);
-    
+
                 // Task title
                 Label titleLabel = new Label(task.getTitle());
                 titleLabel.setStyle("-fx-font-weight: bold;");
                 titleLabel.setTextFill(task.isCompleted() ? Color.GRAY : Color.BLACK);
-    
+
                 // Task description
                 Label descriptionLabel = new Label("Description: " + task.getDescription());
                 descriptionLabel.setTextFill(task.isCompleted() ? Color.GRAY : Color.BLACK);
-    
+
                 // Task due date
                 Label dueDateLabel = new Label("Due Date: " + task.getDueDate());
                 dueDateLabel.setTextFill(task.isCompleted() ? Color.GRAY : Color.BLACK);
-    
+
                 // Task category
                 Label categoryLabel = new Label("Category: " + task.getCategory());
                 categoryLabel.setTextFill(task.isCompleted() ? Color.GRAY : Color.BLACK);
-    
+
                 // Task priority
                 Label priorityLabel = new Label("Priority: " + task.getPriority());
                 priorityLabel.setTextFill(task.isCompleted() ? Color.GRAY : Color.BLACK);
-    
+
                 // "Complete" image button
                 Image completeImage = new Image("file:public/complete.png");
                 ImageView completeImageView = new ImageView(completeImage);
@@ -279,9 +241,9 @@ public class UITask extends Application {
                 completeButton.setStyle("-fx-background-color: transparent;");
                 completeButton.setOnAction(e -> {
                     task.toggleCompleted();
-                    updateItem(task, false);
+                    updateItem(task, false); // Update task display
                 });
-    
+
                 // "Delete" image button
                 Image deleteImage = new Image("file:public/dustbin.png");
                 ImageView deleteImageView = new ImageView(deleteImage);
@@ -290,13 +252,12 @@ public class UITask extends Application {
                 Button deleteButton = new Button("", deleteImageView);
                 deleteButton.setStyle("-fx-background-color: transparent;");
                 deleteButton.setOnAction(e -> {
-                    tasks.remove(task);
-                    StorageSystem.saveTasksToCSV(); // Save after removing task
+                    uiTask.removeTask(task);
                 });
-    
+
                 taskRow.getChildren().addAll(titleLabel, completeButton, deleteButton);
                 taskBox.getChildren().addAll(taskRow, descriptionLabel, dueDateLabel, categoryLabel, priorityLabel);
-    
+
                 setGraphic(taskBox);
             }
         }
