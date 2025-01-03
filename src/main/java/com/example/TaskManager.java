@@ -350,38 +350,34 @@ public class TaskManager {
         
         // Load tasks from CSV before adding the new task
         loadTasksFromCSV();
-        
-        String dueDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-        String isComplete = "incomplete";
-        String dependencies = ""; // Assuming no dependencies for recurring tasks initially
-        String nextCreationDate = null;
 
-        // Calculate the next creation date based on recurrence
-        LocalDate parsedDueDate = LocalDate.parse(dueDate, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-        switch (recurrence) {
-            case "daily":
-                nextCreationDate = parsedDueDate.plusDays(1).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-                break;
-            case "weekly":
-                nextCreationDate = parsedDueDate.plusWeeks(1).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-                break;
-            case "monthly":
-                nextCreationDate = parsedDueDate.plusMonths(1).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-                break;
+        LocalDate initialDueDate = LocalDate.now();
+
+        GeneralTask task = new GeneralTask(title, description, initialDueDate.format(dateFormatter), recurrence);
+
+        if (task.getNextCreationDate() != null) {
+            // Convert GeneralTask to StorageTask before saving
+            StorageTask storageTask = convertToStorageTask(task);
+            StorageSystem.storageTasks.add(storageTask);
+            System.out.println("\nRecurring task \"" + title + "\" added successfully!");
+
+            // Save the updated task list to the CSV file
+            saveTasksToCSV();
         }
-
-        // Create a new StorageTask
-        StorageTask task = new StorageTask(
-                title, description, dueDate, "None", "Medium", // Category and priority default values
-                isComplete, dependencies, recurrence, nextCreationDate
+    }
+    
+    public static StorageTask convertToStorageTask(GeneralTask generalTask) {
+        return new StorageTask(
+                generalTask.getTitle(),
+                generalTask.getDescription(),
+                generalTask.getDueDate(),
+                generalTask.getCategory(),
+                generalTask.getPriority(),
+                generalTask.getIsComplete(),
+                generalTask.getDependenciesAsString(),
+                generalTask.getRecurrence(),
+                generalTask.getNextCreationDateAsString()
         );
-
-        // Add the task to the storageTasks list
-        StorageSystem.storageTasks.add(task);
-        System.out.println("\nRecurring task \"" + title + "\" added successfully!");
-
-        // Save the updated task list to the CSV file
-        saveTasksToCSV();
     }
 
     private static void generateRecurringTasks() {
