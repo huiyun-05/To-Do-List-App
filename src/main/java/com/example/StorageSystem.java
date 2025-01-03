@@ -245,7 +245,10 @@ public class StorageSystem {
             return task;
         }).collect(Collectors.toList());
     }
-
+    public static void setStorageTasks(List<StorageTask> tasks) {
+        storageTasks = tasks;
+    }
+    
     public static List<StorageTask> getStorageTasks() {
         return storageTasks;
     }
