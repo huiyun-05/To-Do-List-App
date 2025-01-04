@@ -2,6 +2,7 @@ package com.example;
 import com.example.StorageSystem.StorageTask;
 import static com.example.StorageSystem.loadTasksFromCSV;
 import static com.example.StorageSystem.saveTasksToCSV;
+import static com.example.StorageSystem.storageTasks;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -566,6 +567,7 @@ private static LocalDate incrementDate(LocalDate date, String recurrence) {
         }
 
         GeneralTask task = tasks.get(taskNumber - 1);
+        StorageTask storageTask = storageTasks.get(taskNumber - 1);  // Get the corresponding StorageTask
 
         System.out.println("\nWhat would you like to edit?");
         System.out.println("1. Title");
@@ -585,12 +587,14 @@ private static LocalDate incrementDate(LocalDate date, String recurrence) {
                 System.out.print("Enter the new title: ");
                 temp = task.getTitle();
                 task.setTitle(scanner.nextLine());
+                storageTask.setTitle(task.getTitle());  // Update the corresponding StorageTask
                 System.out.printf("\nTitle updated: \"%s\" -> \"%s\"%n", temp, task.getTitle());
                 break;
             case 2:
                 System.out.print("Enter the new description: ");
                 temp = task.getDescription();
                 task.setDescription(scanner.nextLine());
+                storageTask.setDescription(task.getDescription());  // Update the corresponding StorageTask
                 System.out.printf("\nDescription updated: \"%s\" -> \"%s\"%n", temp, task.getDescription());
                 break;
             case 3:
@@ -599,6 +603,7 @@ private static LocalDate incrementDate(LocalDate date, String recurrence) {
                 if (isValidDate(newDueDate)) {
                     temp = task.getDueDate();
                     task.setDueDate(newDueDate);
+                    storageTask.setDueDate(newDueDate);  // Update the corresponding StorageTask
                     System.out.printf("\nDue date updated: \"%s\" -> \"%s\"%n", temp, task.getDueDate());
                 } else {
                     System.out.println("Invalid date format. Please try again.");
@@ -609,6 +614,7 @@ private static LocalDate incrementDate(LocalDate date, String recurrence) {
                 System.out.print("Enter the new category: ");
                 temp = task.getCategory();
                 task.setCategory(scanner.nextLine());
+                storageTask.setCategory(task.getCategory());  // Update the corresponding StorageTask
                 System.out.printf("\nCategory updated: \"%s\" -> \"%s\"%n", temp, task.getCategory());
                 break;
             case 5:
@@ -617,6 +623,7 @@ private static LocalDate incrementDate(LocalDate date, String recurrence) {
                 String newPriority = scanner.nextLine();
                 if (isValidPriority(newPriority)) {
                     task.setPriority(newPriority);
+                    storageTask.setPriority(newPriority);  // Update the corresponding StorageTask
                     System.out.printf("\nPriority updated: \"%s\" -> \"%s\"%n", temp, task.getPriority());
                 } else {
                     System.out.println("Invalid priority. Please try again.");
