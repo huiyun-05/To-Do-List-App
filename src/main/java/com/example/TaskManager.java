@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 
 public class TaskManager {
     static List<GeneralTask> tasks = new ArrayList<>();
+    private static List<StorageTask> storageTasks = new ArrayList<>();
     static Scanner scanner = new Scanner(System.in);
     static LocalDate lastGenerationDate = LocalDate.of(2000, 1, 1); //Initialize to a past date
     static DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -429,7 +430,10 @@ public class TaskManager {
         tasks.addAll(newTasks);
 
         // Sort tasks by due date
-        tasks.sort(Comparator.comparing(t -> t.nextCreationDate));
+        tasks.sort(Comparator.comparing(
+                t -> t.nextCreationDate,
+                Comparator.nullsLast(Comparator.naturalOrder())
+        ));
         
         // Save the updated tasks list to the CSV file
         saveTasksToCSV();
@@ -439,8 +443,12 @@ public class TaskManager {
     }
 
     private static void setTaskDependency() {
+        System.out.println("Before loading, storageTasks size: " + storageTasks.size());
         // Load tasks from CSV before setting the dependency
         loadTasksFromCSV();
+        
+        System.out.println("After loading tasks, storageTasks size: " + storageTasks.size());
+        System.out.println("After loading tasks, tasks size: " + tasks.size());
 
         System.out.println("\n=== Set Task Dependency ===");
         System.out.print("Enter task number that depends on another task: ");
@@ -449,7 +457,7 @@ public class TaskManager {
         int precedingTask = scanner.nextInt();
 
         // Validate task numbers
-        if (!isValidTaskNumber(dependentTask) || !isValidTaskNumber(precedingTask)) {
+        if (dependentTask < 1 || dependentTask > tasks.size() || precedingTask < 1 || precedingTask > tasks.size()) {
             System.out.println("Invalid task numbers. Please provide valid task numbers.");
             return;
         }
@@ -459,10 +467,10 @@ public class TaskManager {
             System.out.println("Error: A task cannot depend on itself.");
             return;
         }
-
+        
         // Retrieve tasks
-        GeneralTask dependent = tasks.get(dependentTask - 1);
-        GeneralTask preceding = tasks.get(precedingTask - 1);
+        StorageTask dependent = storageTasks.get(dependentTask - 1);
+        StorageTask preceding = storageTasks.get(precedingTask - 1);
 
         // Ensure dependencies are initialized
         if (dependent.getDependencies() == null) {
@@ -509,7 +517,7 @@ public class TaskManager {
         visited.add(currentTask);
 
         // Check dependencies recursively
-        GeneralTask task = tasks.get(currentTask - 1);
+        StorageTask task = storageTasks.get(currentTask - 1);
         if (task.getDependencies() != null) {
             for (int dependency : task.getDependencies()) {
                 if (hasCycle(dependency, targetTask, visited)) {
@@ -523,7 +531,7 @@ public class TaskManager {
 
     // Validates task numbers
     private static boolean isValidTaskNumber(Integer taskNum) {
-        return taskNum != null && taskNum > 0 && taskNum <= tasks.size();
+        return taskNum != null && taskNum > 0 && taskNum <= storageTasks.size();
     }
 
     public static void editTask() {
