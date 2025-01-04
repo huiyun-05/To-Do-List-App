@@ -553,7 +553,7 @@ public class TaskManager {
     System.out.printf("Task \"%s\" depends on: %s\n", task.getTitle(), dependencyMessages.isEmpty() ? "has no dependencies" : dependencyMessages);
     }
 
-    public static void editTask() {
+     public static void editTask() {
         // Load tasks from CSV before editing
         loadTasksFromCSV();
 
@@ -568,6 +568,7 @@ public class TaskManager {
         }
 
         GeneralTask task = tasks.get(taskNumber - 1);
+        StorageTask storageTask = storageTasks.get(taskNumber - 1);  // Get the corresponding StorageTask
 
         System.out.println("\nWhat would you like to edit?");
         System.out.println("1. Title");
@@ -587,12 +588,14 @@ public class TaskManager {
                 System.out.print("Enter the new title: ");
                 temp = task.getTitle();
                 task.setTitle(scanner.nextLine());
+                storageTask.setTitle(task.getTitle());  // Update the corresponding StorageTask
                 System.out.printf("\nTitle updated: \"%s\" -> \"%s\"%n", temp, task.getTitle());
                 break;
             case 2:
                 System.out.print("Enter the new description: ");
                 temp = task.getDescription();
                 task.setDescription(scanner.nextLine());
+                storageTask.setDescription(task.getDescription());  // Update the corresponding StorageTask
                 System.out.printf("\nDescription updated: \"%s\" -> \"%s\"%n", temp, task.getDescription());
                 break;
             case 3:
@@ -601,6 +604,7 @@ public class TaskManager {
                 if (isValidDate(newDueDate)) {
                     temp = task.getDueDate();
                     task.setDueDate(newDueDate);
+                    storageTask.setDueDate(newDueDate);  // Update the corresponding StorageTask
                     System.out.printf("\nDue date updated: \"%s\" -> \"%s\"%n", temp, task.getDueDate());
                 } else {
                     System.out.println("Invalid date format. Please try again.");
@@ -611,6 +615,7 @@ public class TaskManager {
                 System.out.print("Enter the new category: ");
                 temp = task.getCategory();
                 task.setCategory(scanner.nextLine());
+                storageTask.setCategory(task.getCategory());  // Update the corresponding StorageTask
                 System.out.printf("\nCategory updated: \"%s\" -> \"%s\"%n", temp, task.getCategory());
                 break;
             case 5:
@@ -619,6 +624,7 @@ public class TaskManager {
                 String newPriority = scanner.nextLine();
                 if (isValidPriority(newPriority)) {
                     task.setPriority(newPriority);
+                    storageTask.setPriority(newPriority);  // Update the corresponding StorageTask
                     System.out.printf("\nPriority updated: \"%s\" -> \"%s\"%n", temp, task.getPriority());
                 } else {
                     System.out.println("Invalid priority. Please try again.");
@@ -653,7 +659,6 @@ public class TaskManager {
             return false;
         }
     }
-
     // Helper function to validate priority values
     private static boolean isValidPriority(String priority) {
         return priority.equalsIgnoreCase("High") || priority.equalsIgnoreCase("Medium") || priority.equalsIgnoreCase("Low");
@@ -667,9 +672,6 @@ public class TaskManager {
             System.out.println("\nNo tasks available!");
             return;
         }
-
-        // Sort tasks by due date before displaying
-        StorageSystem.storageTasks.sort(Comparator.comparing(StorageTask::getDueDate, Comparator.nullsLast(Comparator.naturalOrder())));
 
         System.out.println("\n=== View All Tasks ===");
         for (int i = 0; i < StorageSystem.storageTasks.size(); i++) {
