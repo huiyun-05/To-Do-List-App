@@ -99,16 +99,12 @@ public class StorageSystem {
         public String getIsComplete() {
             return isComplete;
         }
-
+       
         @Override
         public List<Integer> getDependencies() {
             return parseDependencies(dependencies);
         }
-
-        public String getDependenciesAsString() {
-            return dependencies;
-        }
-
+        
         @Override
         public String getRecurrence() {
             return recurrence;
@@ -164,6 +160,35 @@ public class StorageSystem {
 
         public void setDependencies(String dependencies) {
             this.dependencies = dependencies;
+        }
+        
+        // Method to get dependencies as a List<Integer>
+        public List<Integer> getDependenciesAsList() {
+            if (dependencies == null || dependencies.isEmpty()) {
+                return new ArrayList<>();
+            }
+            String[] depArray = dependencies.split(",");  // Split by commas
+            List<Integer> depList = new ArrayList<>();
+            for (String dep : depArray) {
+                try {
+                    depList.add(Integer.parseInt(dep));  // Convert each dependency to Integer
+                } catch (NumberFormatException e) {
+                    System.out.println("Invalid dependency: " + dep);  // Handle errors
+                }
+            }
+            return depList;
+        }
+
+        // Method to set dependencies from a List<Integer>
+        public void setDependenciesFromList(List<Integer> depList) {
+            dependencies = depList.stream()
+                    .map(String::valueOf) // Convert each Integer to String
+                    .collect(Collectors.joining(","));  // Join them with commas
+        }
+
+        // Method to get dependencies as a String (for storage)
+        public String getDependenciesAsString() {
+            return dependencies != null ? dependencies : "";
         }
 
         public void setRecurrence(String recurrence) {
@@ -320,7 +345,16 @@ public class StorageSystem {
                             title, description, dueDate, category, priority,
                             isComplete, dependencies, recurrence, nextCreationDate
                     );
-                    StorageSystem.storageTasks.add(task);
+                    
+                    // Convert dependencies string into a list of integers
+                    if (!dependencies.isEmpty()) {
+                        String[] dependencyIds = dependencies.split(",");
+                        for (String depId : dependencyIds) {
+                            task.addDependency(Integer.parseInt(depId));  // Assuming task IDs are integers
+                        }
+                    }
+
+                    storageTasks.add(task);
                 } else {
                     System.out.println("Skipping invalid line: " + line);  // Handle invalid lines
                 }
@@ -333,6 +367,22 @@ public class StorageSystem {
             tasks.add(new GeneralTask(storageTask.getTitle(), storageTask.getDescription(),
                     storageTask.getDueDate(), storageTask.getRecurrence()));
         }
+//        for (StorageTask storageTask : storageTasks) {
+//            GeneralTask generalTask = new GeneralTask(
+//            storageTask.getTitle(),
+//            storageTask.getDescription(),
+//            storageTask.getDueDate(),
+//            storageTask.getRecurrence()
+//        );
+//
+//    // Add dependencies if they exist in the StorageTask
+//        if (!storageTask.getDependencies().isEmpty()) {
+//            for (Integer dep : storageTask.getDependencies()) {
+//                generalTask.addDependency(dep);  // Assuming addDependency() method exists in GeneralTask
+//            }
+//        }
+//        tasks.add(generalTask);
+//        }
     }
 
     // Save tasks to CSV file
