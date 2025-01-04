@@ -84,6 +84,10 @@ public class GeneralTask {
     public boolean isComplete() {
         return isComplete;
     }
+    
+    public String getIsComplete() {
+        return isComplete ? "complete" : "incomplete";
+    }
 
     public void setComplete(boolean isComplete) {
         this.isComplete = isComplete;
@@ -109,6 +113,15 @@ public class GeneralTask {
         return dependencies; 
     }
     
+    public String getDependenciesAsString() {
+        if (dependencies == null || dependencies.isEmpty()) {
+            return "";
+        }
+        return String.join(";", dependencies.stream()
+                .map(String::valueOf)
+                .collect(Collectors.toList()));
+    }
+    
     public void setDependencies(List<Integer> dependencies) { 
         this.dependencies = dependencies; 
     }
@@ -129,6 +142,13 @@ public class GeneralTask {
         return nextCreationDate;
     }
     
+    public String getNextCreationDateAsString() {
+        if (nextCreationDate == null) {
+            return "";
+        }
+        return nextCreationDate.toString(); // Convert LocalDate to String
+    }
+
     public void setNextCreationDate(LocalDate nextCreationDate) {
         this.nextCreationDate = nextCreationDate;
     }

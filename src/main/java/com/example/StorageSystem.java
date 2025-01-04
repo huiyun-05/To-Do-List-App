@@ -328,6 +328,11 @@ public class StorageSystem {
         } catch (IOException e) {
             System.out.println("Error reading from CSV: " + e.getMessage());
         }
+        tasks.clear();  // Clear the in-memory task list before loading new tasks
+        for (StorageTask storageTask : storageTasks) {
+            tasks.add(new GeneralTask(storageTask.getTitle(), storageTask.getDescription(),
+                    storageTask.getDueDate(), storageTask.getRecurrence()));
+        }
     }
 
     // Save tasks to CSV file
