@@ -106,7 +106,6 @@
       <version>0.0.5</version>
       <configuration>
         <mainClass>com.example.TodoListApp</mainClass>
-        <mainClass>com.example.EmailNotification</mainClass>
         <options>
           <option>--add-modules</option>
           <option>javafx.controls,javafx.fxml</option>
