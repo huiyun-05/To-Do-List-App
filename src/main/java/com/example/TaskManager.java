@@ -428,7 +428,14 @@ public class TaskManager {
 
         // Add newly generated tasks
         tasks.addAll(newTasks);
-
+        
+        // Add the new tasks to storageTasks (CSV)
+        for (GeneralTask task : newTasks) {
+            StorageTask storageTask = new StorageTask(task.title, task.description, task.nextCreationDate.toString(),
+                    task.category, task.priority, task.getIsComplete(),
+                    "", "", "");  // Add more fields as needed
+            storageTasks.add(storageTask);
+        }
         // Sort tasks by due date
         tasks.sort(Comparator.comparing(t -> t.nextCreationDate));
         
@@ -486,6 +493,10 @@ public class TaskManager {
         dependent.getDependencies().add(precedingTask);
         System.out.printf("Dependency added: Task \"%s\" now depends on Task \"%s\".\n",
                 dependent.getTitle(), preceding.getTitle());
+        
+//        // Now, we need to update the dependency in the corresponding StorageTask
+//        StorageTask dependentStorageTask = storageTasks.get(dependentTask - 1);
+//        dependentStorageTask.setDependenciesAsString(dependent.getDependencies());  // Update the dependency in the StorageTask
 
         // Save updated tasks to CSV
         saveTasksToCSV();
