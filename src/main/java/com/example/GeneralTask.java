@@ -114,12 +114,9 @@ public class GeneralTask {
     }
     
     public String getDependenciesAsString() {
-        if (dependencies == null || dependencies.isEmpty()) {
-            return "";
-        }
-        return String.join(";", dependencies.stream()
-                .map(String::valueOf)
-                .collect(Collectors.toList()));
+        return dependencies.stream()
+                .map(String::valueOf) // Convert each Integer to String
+                .collect(Collectors.joining(",")); // Join them with commas
     }
     
     public void setDependencies(List<Integer> dependencies) { 
@@ -166,8 +163,11 @@ public class GeneralTask {
         }
     }
 
-    public void addDependency(int taskId) {
-        dependencies.add(taskId);
+    public void addDependency(Integer taskId) {
+        // Prevent adding the same dependency multiple times
+        if (!dependencies.contains(taskId)) {
+            dependencies.add(taskId);
+        }
     }
 
     public void markComplete() {
