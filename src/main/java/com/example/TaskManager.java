@@ -169,7 +169,7 @@ public class TaskManager {
             if (task.getDependencies() != null && !task.getDependencies().isEmpty()) {
                 for (Integer dep : task.getDependencies()) {
                     StorageTask depTask = StorageSystem.storageTasks.get(dep - 1);
-                    if (depTask.getIsComplete().equals("incomplete")) {
+                    if (depTask.getIsComplete().equals("false")) {
                         System.out.println("Warning: Task \"" + task.getTitle()
                                 + "\" cannot be marked as complete because it depends on \"" + depTask.getTitle() + "\". Please complete it first.");
                         canMarkComplete = false;
