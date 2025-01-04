@@ -14,6 +14,7 @@ public class StorageSystem {
         private String dependencies;  // Will be stored as a comma-separated String (e.g., "1,2,3")
         private String nextCreationDate;
         private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+      
         // Constructor using String for all parameters
         public StorageTask(
             String title, 
@@ -54,14 +55,21 @@ public class StorageSystem {
         private static List<Integer> parseDependencies(String dependenciesStr) {
             List<Integer> dependenciesList = new ArrayList<>();
             if (dependenciesStr != null && !dependenciesStr.isEmpty()) {
-                String[] deps = dependenciesStr.split(",");
+                String[] deps = dependenciesStr.split(";");
                 for (String dep : deps) {
-                    dependenciesList.add(Integer.parseInt(dep.trim()));  // Add each dependency as an Integer
+                    // Extract dependency number only 
+                    String[] parts = dep.split(":");
+                    dependenciesList.add(Integer.parseInt(dep.trim())); // Parse only numeric dependencies
                 }
             }
             return dependenciesList;
         }
-
+        
+        @Override 
+        public String getDependenciesAsString() {
+            return dependencies;
+        }
+        
         // Utility method to parse next creation date from a string
         public static LocalDate parseNextCreationDate(String nextCreationDateStr) {
             if (nextCreationDateStr != null && !nextCreationDateStr.isEmpty()) {
@@ -99,12 +107,12 @@ public class StorageSystem {
         public String getIsComplete() {
             return isComplete;
         }
-       
+
         @Override
         public List<Integer> getDependencies() {
             return parseDependencies(dependencies);
         }
-        
+
         @Override
         public String getRecurrence() {
             return recurrence;
@@ -119,11 +127,11 @@ public class StorageSystem {
         public String getNextCreationDateAsString() {
             return nextCreationDate;
         }
-
+            
         // Instance method for parsing dependencies
         public List<Integer> parseDependencies() {
             if (dependencies != null && !dependencies.isEmpty()) {
-                return Arrays.stream(dependencies.split(",")).map(Integer::parseInt).collect(Collectors.toList());
+                return Arrays.stream(dependencies.split(";")).map(Integer::parseInt).collect(Collectors.toList());
             }
             return new ArrayList<>();
         }
@@ -161,35 +169,6 @@ public class StorageSystem {
         public void setDependencies(String dependencies) {
             this.dependencies = dependencies;
         }
-        
-        // Method to get dependencies as a List<Integer>
-        public List<Integer> getDependenciesAsList() {
-            if (dependencies == null || dependencies.isEmpty()) {
-                return new ArrayList<>();
-            }
-            String[] depArray = dependencies.split(",");  // Split by commas
-            List<Integer> depList = new ArrayList<>();
-            for (String dep : depArray) {
-                try {
-                    depList.add(Integer.parseInt(dep));  // Convert each dependency to Integer
-                } catch (NumberFormatException e) {
-                    System.out.println("Invalid dependency: " + dep);  // Handle errors
-                }
-            }
-            return depList;
-        }
-
-        // Method to set dependencies from a List<Integer>
-        public void setDependenciesFromList(List<Integer> depList) {
-            dependencies = depList.stream()
-                    .map(String::valueOf) // Convert each Integer to String
-                    .collect(Collectors.joining(","));  // Join them with commas
-        }
-
-        // Method to get dependencies as a String (for storage)
-        public String getDependenciesAsString() {
-            return dependencies != null ? dependencies : "";
-        }
 
         public void setRecurrence(String recurrence) {
             this.recurrence = recurrence;
@@ -202,7 +181,7 @@ public class StorageSystem {
         // For CSV serialization/deserialization
         @Override
         public String toString() {
-            return String.format("%s,%s,%s,%s,%s,%s,%s,%s,%s", title, description, dueDate, category, priority, isComplete, dependencies, recurrence, nextCreationDate);
+            return String.format("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s", title, description, dueDate, category, priority, isComplete, dependencies, recurrence, nextCreationDate);
         }
 
         public static StorageTask fromCSV(String csvLine) {
@@ -303,7 +282,7 @@ public class StorageSystem {
     }
     // Conversion from GeneralTask to StorageTask
     public static StorageTask convertToStorageTask(GeneralTask generalTask) {
-        String dependenciesString = String.join(";", generalTask.getDependencies().stream().map(String::valueOf).collect(Collectors.toList()));
+        String dependenciesString = generalTask.getDependencies().stream() .map(String::valueOf) .collect(Collectors.joining(";"));
         String nextCreationDate = (generalTask.getNextCreationDate() != null) ? generalTask.getNextCreationDate().toString() : "";
         return new StorageTask(
             generalTask.title,
@@ -318,6 +297,14 @@ public class StorageSystem {
         );
     }
     
+    public static void displayTaskWithDependencies(GeneralTask task) {
+        String dependencyMessages = task.getDependencies().stream()
+                .map(dep -> StorageSystem.tasks.get(dep - 1).getTitle())
+                .collect(Collectors.joining("; "));
+
+        System.out.printf("Task \"%s\" depends on: %s\n", task.getTitle(), dependencyMessages);
+    }
+
     // Load tasks from CSV file
     public static void loadTasksFromCSV() {
         storageTasks.clear();  // Clear existing tasks
@@ -340,21 +327,12 @@ public class StorageSystem {
                     String dependencies = taskData.length > 6 ? taskData[6] : "";  // Default empty if missing
                     String recurrence = taskData.length > 7 ? taskData[7] : "";  // Default empty if missing
                     String nextCreationDate = taskData.length > 8 ? taskData[8] : "";  // Default empty if missing
-
+                    
                     StorageTask task = new StorageTask(
                             title, description, dueDate, category, priority,
                             isComplete, dependencies, recurrence, nextCreationDate
                     );
-                    
-                    // Convert dependencies string into a list of integers
-                    if (!dependencies.isEmpty()) {
-                        String[] dependencyIds = dependencies.split(",");
-                        for (String depId : dependencyIds) {
-                            task.addDependency(Integer.parseInt(depId));  // Assuming task IDs are integers
-                        }
-                    }
-
-                    storageTasks.add(task);
+                    StorageSystem.storageTasks.add(task);
                 } else {
                     System.out.println("Skipping invalid line: " + line);  // Handle invalid lines
                 }
@@ -364,25 +342,19 @@ public class StorageSystem {
         }
         tasks.clear();  // Clear the in-memory task list before loading new tasks
         for (StorageTask storageTask : storageTasks) {
-            tasks.add(new GeneralTask(storageTask.getTitle(), storageTask.getDescription(),
-                    storageTask.getDueDate(), storageTask.getRecurrence()));
+            GeneralTask generalTask = new GeneralTask( 
+                    storageTask.getTitle(), 
+                    storageTask.getDescription(), 
+                    storageTask.getDueDate(), 
+                    storageTask.getCategory(), 
+                    storageTask.getPriority(), 
+                    Boolean.parseBoolean(storageTask.getIsComplete()), 
+                    StorageTask.parseDependencies(storageTask.getDependenciesAsString()), 
+                    storageTask.getRecurrence(), 
+                    storageTask.getNextCreationDate() 
+            ); 
+            tasks.add(generalTask); 
         }
-//        for (StorageTask storageTask : storageTasks) {
-//            GeneralTask generalTask = new GeneralTask(
-//            storageTask.getTitle(),
-//            storageTask.getDescription(),
-//            storageTask.getDueDate(),
-//            storageTask.getRecurrence()
-//        );
-//
-//    // Add dependencies if they exist in the StorageTask
-//        if (!storageTask.getDependencies().isEmpty()) {
-//            for (Integer dep : storageTask.getDependencies()) {
-//                generalTask.addDependency(dep);  // Assuming addDependency() method exists in GeneralTask
-//            }
-//        }
-//        tasks.add(generalTask);
-//        }
     }
 
     // Save tasks to CSV file
