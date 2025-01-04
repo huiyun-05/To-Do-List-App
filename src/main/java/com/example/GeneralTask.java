@@ -28,6 +28,7 @@ public class GeneralTask {
         this.dueDate = dueDate;
         this.category = category;
         this.priority = priority;
+        this.dependencies = new ArrayList<>();
     }
     
     public GeneralTask(String title, String description, String dueDate, String category, String priority, boolean isComplete, List<Integer> dependencies, String recurrence, LocalDate nextCreationDate) {
@@ -54,12 +55,6 @@ public class GeneralTask {
         this.recurrence = recurrence;
         this.isComplete = false;
         this.dependencies = new ArrayList<>();
-    }
-    
-    public GeneralTask(String title, String description, String dueDate, String category,
-            String priority, String isComplete, String dependencies,
-            String recurrence, String nextCreationDate) {
-        // Assign fields here...
     }
     
     public String getTitle() {
@@ -97,7 +92,7 @@ public class GeneralTask {
     public void setComplete(boolean isComplete) {
         this.isComplete = isComplete;
     }
-    
+
     public String getCategory() {
         return category;
     }
