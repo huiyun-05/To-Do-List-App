@@ -2,6 +2,7 @@ package com.example;
 import com.example.StorageSystem.StorageTask;
 import static com.example.StorageSystem.loadTasksFromCSV;
 import static com.example.StorageSystem.saveTasksToCSV;
+import static com.example.StorageSystem.storageTasks;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -18,7 +19,6 @@ import java.util.stream.Collectors;
 
 public class TaskManager {
     static List<GeneralTask> tasks = new ArrayList<>();
-    private static List<StorageTask> storageTasks = new ArrayList<>();
     static Scanner scanner = new Scanner(System.in);
     static LocalDate lastGenerationDate = LocalDate.of(2000, 1, 1); //Initialize to a past date
     static DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -430,10 +430,7 @@ public class TaskManager {
         tasks.addAll(newTasks);
 
         // Sort tasks by due date
-        tasks.sort(Comparator.comparing(
-                t -> t.nextCreationDate,
-                Comparator.nullsLast(Comparator.naturalOrder())
-        ));
+        tasks.sort(Comparator.comparing(t -> t.nextCreationDate));
         
         // Save the updated tasks list to the CSV file
         saveTasksToCSV();
@@ -443,12 +440,8 @@ public class TaskManager {
     }
 
     private static void setTaskDependency() {
-        System.out.println("Before loading, storageTasks size: " + storageTasks.size());
         // Load tasks from CSV before setting the dependency
         loadTasksFromCSV();
-        
-        System.out.println("After loading tasks, storageTasks size: " + storageTasks.size());
-        System.out.println("After loading tasks, tasks size: " + tasks.size());
 
         System.out.println("\n=== Set Task Dependency ===");
         System.out.print("Enter task number that depends on another task: ");
@@ -457,7 +450,7 @@ public class TaskManager {
         int precedingTask = scanner.nextInt();
 
         // Validate task numbers
-        if (dependentTask < 1 || dependentTask > tasks.size() || precedingTask < 1 || precedingTask > tasks.size()) {
+        if (!isValidTaskNumber(dependentTask) || !isValidTaskNumber(precedingTask)) {
             System.out.println("Invalid task numbers. Please provide valid task numbers.");
             return;
         }
@@ -467,10 +460,10 @@ public class TaskManager {
             System.out.println("Error: A task cannot depend on itself.");
             return;
         }
-        
+
         // Retrieve tasks
-        StorageTask dependent = storageTasks.get(dependentTask - 1);
-        StorageTask preceding = storageTasks.get(precedingTask - 1);
+        GeneralTask dependent = tasks.get(dependentTask - 1);
+        GeneralTask preceding = tasks.get(precedingTask - 1);
 
         // Ensure dependencies are initialized
         if (dependent.getDependencies() == null) {
@@ -517,7 +510,7 @@ public class TaskManager {
         visited.add(currentTask);
 
         // Check dependencies recursively
-        StorageTask task = storageTasks.get(currentTask - 1);
+        GeneralTask task = tasks.get(currentTask - 1);
         if (task.getDependencies() != null) {
             for (int dependency : task.getDependencies()) {
                 if (hasCycle(dependency, targetTask, visited)) {
@@ -531,7 +524,7 @@ public class TaskManager {
 
     // Validates task numbers
     private static boolean isValidTaskNumber(Integer taskNum) {
-        return taskNum != null && taskNum > 0 && taskNum <= storageTasks.size();
+        return taskNum != null && taskNum > 0 && taskNum <= tasks.size();
     }
 
     public static void editTask() {
@@ -549,6 +542,7 @@ public class TaskManager {
         }
 
         GeneralTask task = tasks.get(taskNumber - 1);
+        StorageTask storageTask = storageTasks.get(taskNumber - 1);  // Get the corresponding StorageTask
 
         System.out.println("\nWhat would you like to edit?");
         System.out.println("1. Title");
@@ -568,12 +562,14 @@ public class TaskManager {
                 System.out.print("Enter the new title: ");
                 temp = task.getTitle();
                 task.setTitle(scanner.nextLine());
+                storageTask.setTitle(task.getTitle());  // Update the corresponding StorageTask
                 System.out.printf("\nTitle updated: \"%s\" -> \"%s\"%n", temp, task.getTitle());
                 break;
             case 2:
                 System.out.print("Enter the new description: ");
                 temp = task.getDescription();
                 task.setDescription(scanner.nextLine());
+                storageTask.setDescription(task.getDescription());  // Update the corresponding StorageTask
                 System.out.printf("\nDescription updated: \"%s\" -> \"%s\"%n", temp, task.getDescription());
                 break;
             case 3:
@@ -582,6 +578,7 @@ public class TaskManager {
                 if (isValidDate(newDueDate)) {
                     temp = task.getDueDate();
                     task.setDueDate(newDueDate);
+                    storageTask.setDueDate(newDueDate);  // Update the corresponding StorageTask
                     System.out.printf("\nDue date updated: \"%s\" -> \"%s\"%n", temp, task.getDueDate());
                 } else {
                     System.out.println("Invalid date format. Please try again.");
@@ -592,6 +589,7 @@ public class TaskManager {
                 System.out.print("Enter the new category: ");
                 temp = task.getCategory();
                 task.setCategory(scanner.nextLine());
+                storageTask.setCategory(task.getCategory());  // Update the corresponding StorageTask
                 System.out.printf("\nCategory updated: \"%s\" -> \"%s\"%n", temp, task.getCategory());
                 break;
             case 5:
@@ -600,6 +598,7 @@ public class TaskManager {
                 String newPriority = scanner.nextLine();
                 if (isValidPriority(newPriority)) {
                     task.setPriority(newPriority);
+                    storageTask.setPriority(newPriority);  // Update the corresponding StorageTask
                     System.out.printf("\nPriority updated: \"%s\" -> \"%s\"%n", temp, task.getPriority());
                 } else {
                     System.out.println("Invalid priority. Please try again.");
