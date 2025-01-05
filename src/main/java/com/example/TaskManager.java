@@ -545,14 +545,6 @@ public class TaskManager {
         return taskNum != null && taskNum > 0 && taskNum <= tasks.size();
     }
     
-    public static void displayTaskWithDependencies(GeneralTask task) {
-    String dependencyMessages = task.getDependencies().stream()
-            .map(dep -> StorageSystem.tasks.get(dep - 1).getTitle())
-            .collect(Collectors.joining("; "));
-
-    System.out.printf("Task \"%s\" depends on: %s\n", task.getTitle(), dependencyMessages.isEmpty() ? "has no dependencies" : dependencyMessages);
-    }
-
      public static void editTask() {
         // Load tasks from CSV before editing
         loadTasksFromCSV();
