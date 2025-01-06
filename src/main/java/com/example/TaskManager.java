@@ -2,6 +2,7 @@ package com.example;
 import com.example.StorageSystem.StorageTask;
 import static com.example.StorageSystem.loadTasksFromCSV;
 import static com.example.StorageSystem.saveTasksToCSV;
+import static com.example.StorageSystem.storageTasks;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -18,7 +19,6 @@ import java.util.stream.Collectors;
 
 public class TaskManager {
     static List<GeneralTask> tasks = new ArrayList<>();
-    static List<StorageTask> storageTasks = new ArrayList<>();
     static Scanner scanner = new Scanner(System.in);
     static LocalDate lastGenerationDate = LocalDate.of(2000, 1, 1); //Initialize to a past date
     static DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -141,6 +141,7 @@ public class TaskManager {
         // Add the new task to the list of tasks
         StorageSystem.storageTasks.add(newTask);  // Add directly to storageTasks (not GeneralTask)
         StorageSystem.addTask(newTask);  // Use StorageSystem.addTask to handle storage
+        tasks.add(newTask); //add task into generalTask
         
         // Convert the StorageTask to a GeneralTask and add it to the tasks list 
         GeneralTask generalTask = StorageSystem.convertToGeneralTask(newTask); 
@@ -169,7 +170,7 @@ public class TaskManager {
             if (task.getDependencies() != null && !task.getDependencies().isEmpty()) {
                 for (Integer dep : task.getDependencies()) {
                     StorageTask depTask = StorageSystem.storageTasks.get(dep - 1);
-                    if (depTask.getIsComplete().equals("false")) {
+                    if (depTask.getIsComplete().equals("incomplete")) {
                         System.out.println("Warning: Task \"" + task.getTitle()
                                 + "\" cannot be marked as complete because it depends on \"" + depTask.getTitle() + "\". Please complete it first.");
                         canMarkComplete = false;
@@ -439,7 +440,14 @@ public class TaskManager {
 
         // Add newly generated tasks
         tasks.addAll(newTasks);
-
+        
+        // Add the new tasks to storageTasks (CSV)
+        for (GeneralTask task : newTasks) {
+            StorageTask storageTask = new StorageTask(task.title, task.description, task.nextCreationDate.toString(),
+                    task.category, task.priority, task.getIsComplete(),
+                    "", "", "");  // Add more fields as needed
+            storageTasks.add(storageTask);
+        }
         // Sort tasks by due date
         tasks.sort(Comparator.comparing(t -> t.nextCreationDate));
         
@@ -493,15 +501,15 @@ public class TaskManager {
             return;
         }
 
-        // Add the dependency 
+        // Add the dependency
         dependent.getDependencies().add(precedingTask);
        
         System.out.printf("Dependency added: Task \"%s\" now depends on Task \"%s\".\n",
                 dependent.getTitle(), preceding.getTitle());
-    
+        
         // Update the GeneralTask list 
         StorageSystem.tasks.set(dependentTask - 1, dependent);
-        
+
         // Convert the updated GeneralTask list to StorageTask list 
         StorageSystem.storageTasks = StorageSystem.tasks.stream() .map(StorageSystem::convertToStorageTask) .collect(Collectors.toList());
         
@@ -544,8 +552,8 @@ public class TaskManager {
     private static boolean isValidTaskNumber(Integer taskNum) {
         return taskNum != null && taskNum > 0 && taskNum <= tasks.size();
     }
-    
-     public static void editTask() {
+
+    public static void editTask() {
         // Load tasks from CSV before editing
         loadTasksFromCSV();
 
@@ -651,6 +659,7 @@ public class TaskManager {
             return false;
         }
     }
+
     // Helper function to validate priority values
     private static boolean isValidPriority(String priority) {
         return priority.equalsIgnoreCase("High") || priority.equalsIgnoreCase("Medium") || priority.equalsIgnoreCase("Low");
@@ -664,6 +673,9 @@ public class TaskManager {
             System.out.println("\nNo tasks available!");
             return;
         }
+
+        // Sort tasks by due date before displaying
+        StorageSystem.storageTasks.sort(Comparator.comparing(StorageTask::getDueDate, Comparator.nullsLast(Comparator.naturalOrder())));
 
         System.out.println("\n=== View All Tasks ===");
         for (int i = 0; i < StorageSystem.storageTasks.size(); i++) {
