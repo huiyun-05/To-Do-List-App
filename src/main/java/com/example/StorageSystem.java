@@ -46,7 +46,7 @@ public class StorageSystem {
         
         public StorageTask(String title, String description, String dueDate, String category, String priority) {
             super(title, description, dueDate, category, priority); // Pass to parent constructor
-            this.isComplete = "false";
+            this.isComplete = "incomplete";
             this.dependencies = "";
             this.nextCreationDate = "";
         }
