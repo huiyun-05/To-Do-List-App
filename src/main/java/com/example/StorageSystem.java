@@ -1,11 +1,17 @@
 package com.example;
-import com.example.GeneralTask;
-import static com.example.GeneralTask.parseNextCreationDate;
-import java.io.*;
-import java.nio.file.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class StorageSystem {
@@ -305,63 +311,68 @@ public class StorageSystem {
         System.out.printf("Task \"%s\" depends on: %s\n", task.getTitle(), dependencyMessages);
     }
 
-    // Load tasks from CSV file
     public static void loadTasksFromCSV() {
-        storageTasks.clear();  // Clear existing tasks
+    storageTasks.clear();  // Clear existing tasks
 
-        try (BufferedReader reader = new BufferedReader(new FileReader("To-Do-List-App.csv"))) {
-            String line;
-            reader.readLine();  // Skip the header row
+    try (BufferedReader reader = new BufferedReader(new FileReader("To-Do-List-App.csv"))) {
+        String line;
+        reader.readLine();  // Skip the header row
+        if (!Files.exists(Paths.get(CSV_FILE)) || Files.size(Paths.get(CSV_FILE)) == 0) {
+    System.out.println("CSV file is empty or missing. Initializing empty task list.");
+    storageTasks = new ArrayList<>();
+    return;
+}
 
-            while ((line = reader.readLine()) != null) {
-                String[] taskData = line.split(",");
-                System.out.println(Arrays.toString(taskData));  // This will print the array for each row
-                // Check if there are enough columns in the line
-                if (taskData.length >= 6) {  // Check if there are at least 6 fields
-                    String title = taskData[0];
-                    String description = taskData[1];
-                    String dueDate = taskData[2];
-                    String category = taskData[3];
-                    String priority = taskData[4];
-                    String isComplete = taskData[5];
-                    String dependencies = taskData.length > 6 ? taskData[6] : "";  // Default empty if missing
-                    String recurrence = taskData.length > 7 ? taskData[7] : "";  // Default empty if missing
-                    String nextCreationDate = taskData.length > 8 ? taskData[8] : "";  // Default empty if missing
-                    
-                    StorageTask task = new StorageTask(
-                            title, description, dueDate, category, priority,
-                            isComplete, dependencies, recurrence, nextCreationDate
-                    );
-                    StorageSystem.storageTasks.add(task);
-                } else {
-                    System.out.println("Skipping invalid line: " + line);  // Handle invalid lines
-                }
+        while ((line = reader.readLine()) != null) {
+            String[] taskData = line.split(",");
+            if (taskData.length >= 6) {  // Check if there are at least 6 fields
+                String title = taskData[0];
+                String description = taskData[1];
+                String dueDate = taskData[2];
+                String category = taskData[3];
+                String priority = taskData[4];
+                String isComplete = taskData[5];
+                String dependencies = taskData.length > 6 ? taskData[6] : "";  // Default empty if missing
+                String recurrence = taskData.length > 7 ? taskData[7] : "";  // Default empty if missing
+                String nextCreationDate = taskData.length > 8 ? taskData[8] : "";  // Default empty if missing
+                
+                StorageTask task = new StorageTask(
+                        title, description, dueDate, category, priority,
+                        isComplete, dependencies, recurrence, nextCreationDate
+                );
+                StorageSystem.storageTasks.add(task);
+            } else {
+                System.out.println("Skipping invalid line: " + line);  // Handle invalid lines
             }
-        } catch (IOException e) {
-            System.out.println("Error reading from CSV: " + e.getMessage());
         }
-        tasks.clear();  // Clear the in-memory task list before loading new tasks
-        for (StorageTask storageTask : storageTasks) {
-            GeneralTask generalTask = new GeneralTask( 
-                    storageTask.getTitle(), 
-                    storageTask.getDescription(), 
-                    storageTask.getDueDate(), 
-                    storageTask.getCategory(), 
-                    storageTask.getPriority(), 
-                    Boolean.parseBoolean(storageTask.getIsComplete()), 
-                    StorageTask.parseDependencies(storageTask.getDependenciesAsString()), 
-                    storageTask.getRecurrence(), 
-                    storageTask.getNextCreationDate() 
-            ); 
-            tasks.add(generalTask); 
-        }
+    } catch (IOException e) {
+        System.out.println("Error reading from CSV: " + e.getMessage());
     }
+    tasks.clear();  // Clear the in-memory task list before loading new tasks
+    for (StorageTask storageTask : storageTasks) {
+        GeneralTask generalTask = new GeneralTask(
+                storageTask.getTitle(),
+                storageTask.getDescription(),
+                storageTask.getDueDate(),
+                storageTask.getCategory(),
+                storageTask.getPriority(),
+                Boolean.parseBoolean(storageTask.getIsComplete()),
+                StorageTask.parseDependencies(storageTask.getDependenciesAsString()),
+                storageTask.getRecurrence(),
+                storageTask.getNextCreationDate()
+        );
+        tasks.add(generalTask);
+    }
+
+    // Debugging print statement
+    System.out.println("Loaded tasks: " + tasks.size());
+}
 
     // Save tasks to CSV file
     public static void saveTasksToCSV() {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter("To-Do-List-App.csv"))) {
             // Write the header with the new column
-            writer.write("Title,Description,Due Date (YYYY-MM-DD),Category (Homework/ Personal/ Work),Priority Level (low/ medium/ high),Completion Status (complete/ incomplete),Dependencies,Recurrence,Next Creation Date (YYYY-MM-DD)");
+            writer.write("Title,Description,Due Date (DD-MM-YYYY),Category (Homework/ Personal/ Work),Priority Level (low/ medium/ high),Completion Status (complete/ incomplete),Dependencies,Recurrence,Creation Date (DD-MM-YYYY)");
             writer.newLine();
 
             // Write each task in CSV format

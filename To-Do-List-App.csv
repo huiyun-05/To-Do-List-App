@@ -1,2 +1,3 @@
-Title,Description,Due Date (YYYY-MM-DD),Category (Homework/ Personal/ Work),Priority Level (low/ medium/ high),Completion Status (complete/ incomplete),Dependencies,Recurrence,Next Creation Date (YYYY-MM-DD)
-report,everyday,null,null,null,incomplete,,daily,2025-01-07
+Title,Description,Due Date (DD-MM-YYYY),Category (Homework/ Personal/ Work),Priority Level (low/ medium/ high),Completion Status (complete/ incomplete),Dependencies,Recurrence,Creation Date (DD-MM-YYYY)
+Physics report,report,2025-03-01,Homework,Low,false,,,
+Draw graph,graph,2025-02-15,Homework,Low,false,1,,

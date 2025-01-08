@@ -1,21 +1,20 @@
 package com.example;
-import com.example.StorageSystem.StorageTask;
-import static com.example.StorageSystem.loadTasksFromCSV;
-import static com.example.StorageSystem.saveTasksToCSV;
-import static com.example.StorageSystem.storageTasks;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashSet;
+import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
-import java.util.HashSet;
-import java.util.InputMismatchException;
-import java.util.Optional;
 import java.util.stream.Collectors;
+
+import com.example.StorageSystem.StorageTask;
+import static com.example.StorageSystem.loadTasksFromCSV;
+import static com.example.StorageSystem.saveTasksToCSV;
+import static com.example.StorageSystem.storageTasks;
 
 public class TaskManager {
     static List<GeneralTask> tasks = new ArrayList<>();
@@ -306,7 +305,7 @@ public class TaskManager {
         System.out.println("=== Search Tasks ===");
         System.out.print("Enter a keyword to search by title or description: ");
         String keyword = scanner.nextLine().trim().toLowerCase();
-
+        System.out.print("> ");
         if (keyword.isEmpty()) {
             System.out.println("Keyword cannot be empty. Please try again.");
             return;
@@ -377,85 +376,103 @@ public class TaskManager {
         String dependenciesString = generalTask.getDependencies().stream()
                 .map(String::valueOf)
                 .collect(Collectors.joining(","));
-        String nextCreationDate = (generalTask.getNextCreationDate() != null) ? generalTask.getNextCreationDate().toString() : "";
-
+        String nextCreationDate = (generalTask.getNextCreationDate() != null) 
+            ? generalTask.getNextCreationDate().toString() 
+            : "";
+        
+        // Determine if the task is complete or incomplete
+        String completionStatus = generalTask.isComplete() ? "complete" : "incomplete";
+    
         return new StorageTask(
             generalTask.getTitle(),
             generalTask.getDescription(),
             generalTask.getDueDate(),
             generalTask.getCategory(),
             generalTask.getPriority(),
-            Boolean.toString(generalTask.isComplete()),  // Convert boolean to String
+            completionStatus,  // Use the string "complete" or "incomplete"
             dependenciesString,
             generalTask.getRecurrence(),
             nextCreationDate
         );
     }
+    
 
-    private static void generateRecurringTasks() {
-    LocalDate today = LocalDate.now();
-    if (lastGenerationDate != null && lastGenerationDate.equals(today)) {
-        return; // Don't generate tasks more than once a day
-    }
+    public static void generateRecurringTasks() {
+        LocalDate today = LocalDate.now();
 
-    List<GeneralTask> newTasks = new ArrayList<>();
-    Set<String> existingTasks = new HashSet<>();
+        // Check if tasks were already generated today
+        if (lastGenerationDate != null && lastGenerationDate.equals(today)) {
+            System.out.println("Tasks already generated today. Exiting method.");
+            return;
+        }
 
-    // Load tasks from CSV before generating recurring tasks
-    loadTasksFromCSV();
+        List<StorageTask> newTasks = new ArrayList<>();
+        Set<String> existingTasks = new HashSet<>();
 
-    // Collect already existing tasks in the set to check for duplicates
-    for (GeneralTask task : tasks) {
-        existingTasks.add(task.title + task.nextCreationDate.toString());
-    }
+        // Load tasks from CSV before generating recurring tasks
+        loadTasksFromCSV();
 
-    for (GeneralTask task : tasks) {
-        if (!task.recurrence.isEmpty()) {
-            LocalDate nextDueDate = task.getNextDueDate();
-
-            // Generate tasks until the next due date is beyond today
-            while (!nextDueDate.isAfter(today)) {
-                if (!existingTasks.contains(task.title + nextDueDate.toString())) {
-                    // Create new task for the next due date
-                    GeneralTask newTask = new GeneralTask(task.title, task.description, nextDueDate.format(dateFormatter), task.recurrence);
-                    newTasks.add(newTask);
-                    existingTasks.add(task.title + nextDueDate.toString()); // Mark this task as existing
-
-                    // Debugging print statement
-                    System.out.println("Generated task: " + newTask.title + " for date: " + nextDueDate);
-                }
-                // Increment the due date based on the recurrence interval
-                switch (task.recurrence) {
-                    case "daily":
-                        nextDueDate = nextDueDate.plusDays(1);
-                        break;
-                    case "weekly":
-                        nextDueDate = nextDueDate.plusWeeks(1);
-                        break;
-                    case "monthly":
-                        nextDueDate = nextDueDate.plusMonths(1);
-                        break;
-                }
+        // Collect already existing tasks in the set to check for duplicates
+        for (StorageTask task : storageTasks) {
+            if (task.getNextCreationDate() != null) {
+                existingTasks.add(task.getTitle() + task.getNextCreationDate().toString());
             }
         }
+
+        for (StorageTask task : storageTasks) {
+            if (task.isRecurring() && task.getNextCreationDate() != null) {
+                LocalDate nextCreationDate = task.getNextCreationDate();
+                while (!nextCreationDate.isAfter(today)) {
+                    String taskKey = task.getTitle() + nextCreationDate.toString();
+                    if (!existingTasks.contains(taskKey)) {
+                        StorageTask newTask = new StorageTask(
+                            task.getTitle(),
+                            task.getDescription(),
+                            task.getDueDate(),
+                            task.getCategory(),
+                            task.getPriority(),
+                            "incomplete",
+                            task.getDependenciesAsString(),
+                            task.getRecurrence(),
+                            nextCreationDate.toString()
+                        );
+                        newTasks.add(newTask);
+                        existingTasks.add(taskKey);
+                        System.out.println("Generated task: " + task.getTitle() + " for date: " + nextCreationDate);
+                    }
+                    nextCreationDate = getNextCreationDate(nextCreationDate, task.getRecurrence());
+                }
+                task.setNextCreationDate(nextCreationDate);
+            }
+        }
+
+        // Add newly generated tasks
+        storageTasks.addAll(newTasks);
+
+        // Sort tasks by due date
+        
+        // Debugging print statement
+        System.out.println("Total tasks after generation: " + storageTasks.size());
+
+        // Save the updated tasks list to the CSV file
+        saveTasksToCSV();
+
+        // Update the last generation date
+        lastGenerationDate = today;
     }
 
-    // Add newly generated tasks
-    tasks.addAll(newTasks);
-
-    // Sort tasks by due date
-    tasks.sort(Comparator.comparing(t -> t.nextCreationDate));
-
-    // Debugging print statement
-    System.out.println("Total tasks after generation: " + tasks.size());
-
-    // Save the updated tasks list to the CSV file
-    saveTasksToCSV();
-
-    // Update the last generation date
-    lastGenerationDate = today;
-}
-
+    private static LocalDate getNextCreationDate(LocalDate currentDate, String recurrence) {
+        switch (recurrence.toLowerCase()) {
+            case "daily":
+                return currentDate.plusDays(1);
+            case "weekly":
+                return currentDate.plusWeeks(1);
+            case "monthly":
+                return currentDate.plusMonths(1);
+            default:
+                throw new IllegalArgumentException("Unknown recurrence: " + recurrence);
+        }
+    }
 
     private static void setTaskDependency() {
         // Load tasks from CSV before setting the dependency
@@ -588,14 +605,14 @@ public class TaskManager {
                 temp = task.getTitle();
                 task.setTitle(scanner.nextLine());
                 storageTask.setTitle(task.getTitle());  // Update the corresponding StorageTask
-                System.out.printf("\nTitle updated: \"%s\" -> \"%s\"%n", temp, task.getTitle());
+                System.out.println("\nTask \"" + temp + "\" has been updated to \"" + task.getTitle() + ".\"");
                 break;
             case 2:
                 System.out.print("Enter the new description: ");
                 temp = task.getDescription();
                 task.setDescription(scanner.nextLine());
                 storageTask.setDescription(task.getDescription());  // Update the corresponding StorageTask
-                System.out.printf("\nDescription updated: \"%s\" -> \"%s\"%n", temp, task.getDescription());
+                System.out.println("\nTask \"" + temp + "\" has been updated to \"" + task.getDescription()+ ".\"");
                 break;
             case 3:
                 System.out.print("Enter the new due date (YYYY-MM-DD): ");
@@ -604,7 +621,8 @@ public class TaskManager {
                     temp = task.getDueDate();
                     task.setDueDate(newDueDate);
                     storageTask.setDueDate(newDueDate);  // Update the corresponding StorageTask
-                    System.out.printf("\nDue date updated: \"%s\" -> \"%s\"%n", temp, task.getDueDate());
+                    System.out.println("\nTask \"" + temp + "\" has been updated to \"" + task.getDueDate() + ".\"");
+
                 } else {
                     System.out.println("Invalid date format. Please try again.");
                     return;
@@ -615,7 +633,7 @@ public class TaskManager {
                 temp = task.getCategory();
                 task.setCategory(scanner.nextLine());
                 storageTask.setCategory(task.getCategory());  // Update the corresponding StorageTask
-                System.out.printf("\nCategory updated: \"%s\" -> \"%s\"%n", temp, task.getCategory());
+                System.out.println("\nTask \"" + temp + "\" has been updated to \"" + task.getCategory()+ ".\"");
                 break;
             case 5:
                 System.out.print("Enter the new priority (e.g., High, Medium, Low): ");
@@ -624,7 +642,7 @@ public class TaskManager {
                 if (isValidPriority(newPriority)) {
                     task.setPriority(newPriority);
                     storageTask.setPriority(newPriority);  // Update the corresponding StorageTask
-                    System.out.printf("\nPriority updated: \"%s\" -> \"%s\"%n", temp, task.getPriority());
+                    System.out.println("\nTask \"" + temp + "\" has been updated to \"" + task.getPriority()+ ".\"");
                 } else {
                     System.out.println("Invalid priority. Please try again.");
                     return;
@@ -667,6 +685,7 @@ public class TaskManager {
     private static void viewAllTasks() {
         // Load tasks from CSV before viewing
         loadTasksFromCSV();
+        generateRecurringTasks();
 
         if (StorageSystem.storageTasks.isEmpty()) {
             System.out.println("\nNo tasks available!");
