@@ -376,7 +376,6 @@ public class TaskManager {
         String dependenciesString = generalTask.getDependencies().stream()
                 .map(String::valueOf)
                 .collect(Collectors.joining(","));
-<<<<<<< HEAD
         String nextCreationDate = (generalTask.getNextCreationDate() != null) 
             ? generalTask.getNextCreationDate().toString() 
             : "";
@@ -384,21 +383,13 @@ public class TaskManager {
         // Determine if the task is complete or incomplete
         String completionStatus = generalTask.isComplete() ? "complete" : "incomplete";
     
-=======
-        String nextCreationDate = (generalTask.getNextCreationDate() != null) ? generalTask.getNextCreationDate().toString() : "";
-
->>>>>>> 9200227daf7c6c176c1c832acac56d6ca0b68881
         return new StorageTask(
             generalTask.getTitle(),
             generalTask.getDescription(),
             generalTask.getDueDate(),
             generalTask.getCategory(),
             generalTask.getPriority(),
-<<<<<<< HEAD
             completionStatus,  // Use the string "complete" or "incomplete"
-=======
-            Boolean.toString(generalTask.isComplete()),  // Convert boolean to String
->>>>>>> 9200227daf7c6c176c1c832acac56d6ca0b68881
             dependenciesString,
             generalTask.getRecurrence(),
             nextCreationDate
