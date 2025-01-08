@@ -307,8 +307,65 @@ public class StorageSystem {
         String dependencyMessages = task.getDependencies().stream()
                 .map(dep -> StorageSystem.tasks.get(dep - 1).getTitle())
                 .collect(Collectors.joining("; "));
+<<<<<<< HEAD
 
         System.out.printf("Task \"%s\" depends on: %s\n", task.getTitle(), dependencyMessages);
+=======
+
+        System.out.printf("Task \"%s\" depends on: %s\n", task.getTitle(), dependencyMessages);
+    }
+
+    // Load tasks from CSV file
+    public static void loadTasksFromCSV() {
+        storageTasks.clear();  // Clear existing tasks
+
+        try (BufferedReader reader = new BufferedReader(new FileReader("To-Do-List-App.csv"))) {
+            String line;
+            reader.readLine();  // Skip the header row
+
+            while ((line = reader.readLine()) != null) {
+                String[] taskData = line.split(",");
+                System.out.println(Arrays.toString(taskData));  // This will print the array for each row
+                // Check if there are enough columns in the line
+                if (taskData.length >= 6) {  // Check if there are at least 6 fields
+                    String title = taskData[0];
+                    String description = taskData[1];
+                    String dueDate = taskData[2];
+                    String category = taskData[3];
+                    String priority = taskData[4];
+                    String isComplete = taskData[5];
+                    String dependencies = taskData.length > 6 ? taskData[6] : "";  // Default empty if missing
+                    String recurrence = taskData.length > 7 ? taskData[7] : "";  // Default empty if missing
+                    String nextCreationDate = taskData.length > 8 ? taskData[8] : "";  // Default empty if missing
+                    
+                    StorageTask task = new StorageTask(
+                            title, description, dueDate, category, priority,
+                            isComplete, dependencies, recurrence, nextCreationDate
+                    );
+                    StorageSystem.storageTasks.add(task);
+                } else {
+                    System.out.println("Skipping invalid line: " + line);  // Handle invalid lines
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Error reading from CSV: " + e.getMessage());
+        }
+        tasks.clear();  // Clear the in-memory task list before loading new tasks
+        for (StorageTask storageTask : storageTasks) {
+            GeneralTask generalTask = new GeneralTask( 
+                    storageTask.getTitle(), 
+                    storageTask.getDescription(), 
+                    storageTask.getDueDate(), 
+                    storageTask.getCategory(), 
+                    storageTask.getPriority(), 
+                    Boolean.parseBoolean(storageTask.getIsComplete()), 
+                    StorageTask.parseDependencies(storageTask.getDependenciesAsString()), 
+                    storageTask.getRecurrence(), 
+                    storageTask.getNextCreationDate() 
+            ); 
+            tasks.add(generalTask); 
+        }
+>>>>>>> 9200227daf7c6c176c1c832acac56d6ca0b68881
     }
 
     public static void loadTasksFromCSV() {
