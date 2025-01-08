@@ -19,6 +19,7 @@ public class GeneralTask {
     protected List<Integer> dependencies; 
     protected String recurrence; // daily, weekly, monthly
     protected LocalDate nextCreationDate;
+    private String dependenciesAsString;
     
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     
@@ -108,22 +109,28 @@ public class GeneralTask {
     public void setPriority(String priority) {
         this.priority = priority;
     }
-
+    
+    // Getter for dependencies
     public List<Integer> getDependencies() { 
         return dependencies; 
     }
     
-    public String getDependenciesAsString() {
-        if (dependencies == null || dependencies.isEmpty()) {
-            return "";
-        }
-        return String.join(";", dependencies.stream()
-                .map(String::valueOf)
-                .collect(Collectors.toList()));
-    }
-    
+    // Setter for dependencies 
     public void setDependencies(List<Integer> dependencies) { 
         this.dependencies = dependencies; 
+    }
+    
+    // Getter for dependenciesAsString 
+    public String getDependenciesAsString() { 
+        if (dependencies == null || dependencies.isEmpty()) { 
+            return ""; 
+        } 
+        return dependencies.stream() .map(dep -> "depends on \"" + dep + "\"") .collect(Collectors.joining(", ")); 
+    }
+    
+    // Setter for dependenciesAsString 
+    public void setDependenciesAsString(String dependenciesAsString) { 
+        this.dependenciesAsString = dependenciesAsString; 
     }
     
     public String getRecurrence() {

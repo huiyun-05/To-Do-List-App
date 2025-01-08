@@ -1,5 +1,2 @@
 Title,Description,Due Date (YYYY-MM-DD),Category (Homework/ Personal/ Work),Priority Level (low/ medium/ high),Completion Status (complete/ incomplete),Dependencies,Recurrence,Next Creation Date (YYYY-MM-DD)
-report,daily,2025-01-04,None,Medium,incomplete,,daily,2025-01-05
-report,asd,null,null,null,incomplete,,daily,2025-01-04
-sdf,sdf,null,null,null,incomplete,,daily,2025-01-04
-dfg,sfg,null,null,null,incomplete,,daily,2025-01-05
+report,everyday,null,null,null,incomplete,,daily,2025-01-07
