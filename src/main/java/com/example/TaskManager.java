@@ -402,7 +402,6 @@ public class TaskManager {
 
         // Check if tasks were already generated today
         if (lastGenerationDate != null && lastGenerationDate.equals(today)) {
-            System.out.println("Tasks already generated today. Exiting method.");
             return;
         }
 
@@ -448,11 +447,6 @@ public class TaskManager {
 
         // Add newly generated tasks
         storageTasks.addAll(newTasks);
-
-        // Sort tasks by due date
-        
-        // Debugging print statement
-        System.out.println("Total tasks after generation: " + storageTasks.size());
 
         // Save the updated tasks list to the CSV file
         saveTasksToCSV();
