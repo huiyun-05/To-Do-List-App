@@ -15,6 +15,9 @@ import com.example.StorageSystem.StorageTask;
 import static com.example.StorageSystem.loadTasksFromCSV;
 import static com.example.StorageSystem.saveTasksToCSV;
 import static com.example.StorageSystem.storageTasks;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 public class TaskManager {
     static List<GeneralTask> tasks = new ArrayList<>();
@@ -191,39 +194,51 @@ public class TaskManager {
 
     private static void deleteTask() {
         System.out.println("=== Delete a Task ===");
-        System.out.print("Enter the task number you want to delete:");
-        int taskId = scanner.nextInt();
-        
-        // Load tasks from CSV before proceeding
+        System.out.print("Enter the task number you want to delete: ");
+
+        // Load tasks from CSV
         loadTasksFromCSV();
-        
+
+        if (StorageSystem.storageTasks.isEmpty()) {
+            System.out.println("No tasks to delete.");
+            return;
+        }
+
+        int taskId;
+        try {
+            taskId = Integer.parseInt(scanner.nextLine());
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid input. Please enter a valid task number.");
+            return;
+        }
+
         if (taskId >= 1 && taskId <= StorageSystem.storageTasks.size()) {
-            // Remove dependencies from other tasks
-            for (StorageTask t : StorageSystem.storageTasks) {
-                if (t.getDependencies() != null) {
-                    t.getDependencies().remove(Integer.valueOf(taskId));
-                }
-            }
-            // Delete the task from storageTasks
-            StorageTask task = StorageSystem.storageTasks.remove(taskId - 1);
-            System.out.println("Task \"" + task.title + "\" deleted successfully!");
-            // Update dependencies of remaining tasks
-            for (int i = 0; i < StorageSystem.storageTasks.size(); i++) {
-                task = StorageSystem.storageTasks.get(i);
+            // Remove the task
+            StorageTask removedTask = StorageSystem.storageTasks.remove(taskId - 1);
+            System.out.println("Task \"" + removedTask.getTitle() + "\" deleted successfully!");
 
-                if (task.getDependencies() != null) {
-                    // Remove references to the deleted task
-                    task.getDependencies().removeIf(dep -> dep == taskId);
+            // Adjust dependencies for remaining tasks
+            for (StorageTask task : StorageSystem.storageTasks) {
+                List<Integer> dependencies = task.getDependencies();
+                if (dependencies != null) {
+                    // Remove reference to the deleted task
+                    dependencies.remove(Integer.valueOf(taskId));
 
-                    // Adjust indices of dependencies greater than the deleted task ID
-                    for (int j = 0; j < task.getDependencies().size(); j++) {
-                        if (task.getDependencies().get(j) > taskId) {
-                            task.getDependencies().set(j, task.getDependencies().get(j) - 1);
+                    // Shift indices of dependencies greater than the deleted task
+                    for (int i = 0; i < dependencies.size(); i++) {
+                        if (dependencies.get(i) > taskId) {
+                            dependencies.set(i, dependencies.get(i) - 1);
                         }
                     }
+
+                    // Update the task's dependencies string
+                    task.setDependencies(dependencies.stream()
+                            .map(String::valueOf)
+                            .collect(Collectors.joining(";")));
                 }
             }
-            // Save the updated tasks back to CSV
+
+            // Save updated tasks
             saveTasksToCSV();
         } else {
             System.out.println("Invalid task number.");
@@ -241,10 +256,10 @@ public class TaskManager {
         int choice;
         try {
             choice = scanner.nextInt();
-            scanner.nextLine(); // consume the newline character
+            scanner.nextLine(); // Consume the newline character
         } catch (InputMismatchException e) {
             System.out.println("Invalid input. Please enter a number between 1 and 4.");
-            scanner.nextLine(); // clear the invalid input
+            scanner.nextLine(); // Clear the invalid input
             return;
         }
 
@@ -256,6 +271,10 @@ public class TaskManager {
             return;
         }
 
+        // Save the original order of tasks for dependency adjustments
+        List<StorageTask> originalTasks = new ArrayList<>(StorageSystem.storageTasks);
+
+        // Sort tasks based on the user's choice
         switch (choice) {
             case 1:
                 StorageSystem.storageTasks.sort(Comparator.comparing(task -> task.dueDate, Comparator.nullsLast(Comparator.naturalOrder())));
@@ -266,41 +285,71 @@ public class TaskManager {
                 System.out.println("Tasks sorted by Due Date (Descending)!");
                 break;
             case 3:
-                StorageSystem.storageTasks.sort((o1, o2) -> {
-                    StorageTask task1 = (StorageTask) o1;
-                    StorageTask task2 = (StorageTask) o2;
-                    return Integer.compare(getPriorityValue(task2.getPriority()), getPriorityValue(task1.getPriority()));
-                });
+                StorageSystem.storageTasks.sort((o1, o2) -> Integer.compare(
+                    getPriorityValue(o2.getPriority()), getPriorityValue(o1.getPriority())));
                 System.out.println("Tasks sorted by Priority (High to Low)!");
                 break;
             case 4:
-                StorageSystem.storageTasks.sort((o1, o2) -> {
-                    StorageTask task1 = (StorageTask) o1;
-                    StorageTask task2 = (StorageTask) o2;
-                    return Integer.compare(getPriorityValue(task1.getPriority()), getPriorityValue(task2.getPriority()));
-                });
+                StorageSystem.storageTasks.sort((o1, o2) -> Integer.compare(
+                    getPriorityValue(o1.getPriority()), getPriorityValue(o2.getPriority())));
                 System.out.println("Tasks sorted by Priority (Low to High)!");
                 break;
             default:
                 System.out.println("Invalid option. Please select a number between 1 and 4.");
+                return;
         }
+
+        // Adjust dependencies to reflect the new order
+        updateDependenciesAfterSorting(StorageSystem.storageTasks, originalTasks);
+
         // Save the updated tasks back to CSV after sorting
         saveTasksToCSV();
+        System.out.println("Sorting completed.");
     }
-    
-    private static int getPriorityValue(String priority) {
-        switch (priority.toLowerCase()) {
-            case "low":
-                return 1;
-            case "medium":
-                return 2;
-            case "high":
-                return 3;
-            default:
-                return 0; // Unknown priority
+
+    /**
+     * Updates dependencies after sorting to ensure they reflect the new task order.
+     */
+    private static void updateDependenciesAfterSorting(List<StorageTask> sortedTasks, List<StorageTask> originalTasks) {
+        // Map original titles to their new indices
+        Map<String, Integer> titleToNewIndex = new HashMap<>();
+        for (int i = 0; i < sortedTasks.size(); i++) {
+            titleToNewIndex.put(sortedTasks.get(i).getTitle(), i + 1); // 1-based index
+        }
+
+        // Adjust dependencies for each task
+        for (StorageTask task : sortedTasks) {
+            List<Integer> originalDependencies = task.getDependencies();
+            if (originalDependencies != null && !originalDependencies.isEmpty()) {
+                List<Integer> updatedDependencies = originalDependencies.stream()
+                    .map(dep -> titleToNewIndex.get(originalTasks.get(dep - 1).getTitle())) // Map old index to new index
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+
+                // Update dependencies in the task
+                task.setDependencies(updatedDependencies.stream()
+                    .map(String::valueOf)
+                    .collect(Collectors.joining(";")));
+            }
         }
     }
-    
+
+    /**
+     * Converts priority strings to numeric values for sorting.
+     */
+    private static int getPriorityValue(String priority) {
+        switch (priority.toLowerCase()) {
+            case "high":
+                return 3;
+            case "medium":
+                return 2;
+            case "low":
+                return 1;
+            default:
+                return 0; // Default for unknown priorities
+        }
+    }
+
     private static void searchTasks() {
         System.out.println("=== Search Tasks ===");
         System.out.print("Enter a keyword to search by title or description: ");
