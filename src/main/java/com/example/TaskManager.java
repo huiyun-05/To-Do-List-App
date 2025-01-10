@@ -437,7 +437,6 @@ public class TaskManager {
                         );
                         newTasks.add(newTask);
                         existingTasks.add(taskKey);
-                        System.out.println("Generated task: " + task.getTitle() + " for date: " + nextCreationDate);
                     }
                     nextCreationDate = getNextCreationDate(nextCreationDate, task.getRecurrence());
                 }
