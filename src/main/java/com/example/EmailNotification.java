@@ -9,8 +9,8 @@ public class EmailNotification {
 
     // Method to send the email
     public static void sendEmail(String receiverEmail, String taskName, String dueDate) {
-        String userEmail = "youremail@gmail.com"; // Sender's email
-        String password = "yourpassword"; // Your email password 
+        String userEmail = "shakthiselva302@gmail.com"; // Sender's email
+        String password = "iuuk xyas etfc bzhj"; // Your email password 
         
         // Set SMTP properties for Gmail
         Properties pr = new Properties();
