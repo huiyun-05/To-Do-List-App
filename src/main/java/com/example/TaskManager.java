@@ -4,9 +4,12 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.InputMismatchException;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -15,9 +18,6 @@ import com.example.StorageSystem.StorageTask;
 import static com.example.StorageSystem.loadTasksFromCSV;
 import static com.example.StorageSystem.saveTasksToCSV;
 import static com.example.StorageSystem.storageTasks;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
 
 public class TaskManager {
     static List<GeneralTask> tasks = new ArrayList<>();
@@ -304,7 +304,6 @@ public class TaskManager {
 
         // Save the updated tasks back to CSV after sorting
         saveTasksToCSV();
-        System.out.println("Sorting completed.");
     }
 
     /**

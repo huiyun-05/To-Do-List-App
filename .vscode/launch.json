@@ -6,6 +6,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "AnalyticsDashboard",
+            "request": "launch",
+            "mainClass": "com.example.AnalyticsDashboard",
+            "projectName": "todolistapp"
+        },
+        {
+            "type": "java",
             "name": "Current File",
             "request": "launch",
             "mainClass": "${file}"
