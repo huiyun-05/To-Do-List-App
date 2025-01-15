@@ -111,6 +111,7 @@ public class UITask {
                 comparator = comparator.reversed();
             }
             FXCollections.sort(taskList, comparator);
+            saveTasks();
         }
     }
 
@@ -161,7 +162,16 @@ public class UITask {
             this.dueDate = dueDate;
             this.category = category;
             this.priority = priority;
-            this.completed = false;
+            this.completed = false; 
+        }
+        
+        public Task(String title, String description, String dueDate, String category, String priority, boolean completed) {
+            this.title = title;
+            this.description = description;
+            this.dueDate = dueDate;
+            this.category = category;
+            this.priority = priority;
+            this.completed = completed; // Set from the constructor
         }
 
         public String getTitle() {
@@ -242,8 +252,8 @@ public class UITask {
                 completeButton.setOnAction(e -> {
                     task.toggleCompleted();
                     System.out.println("Task completed: "+task.isCompleted());
-                    updateItem(task, false); // Update task display
                     uiTask.saveTasks();
+                    updateItem(task, false); // Update task display
                 });
 
                 // "Delete" image button
