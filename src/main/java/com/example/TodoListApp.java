@@ -42,11 +42,14 @@ public class TodoListApp extends Application {
         HBox inputLayout = new HBox(10, addButton);
         VBox controlLayout = new VBox(10, inputLayout, sortByDueDateAscButton, sortByDueDateDescButton, sortByPriorityAscButton, sortByPriorityDescButton);
         HBox root = new HBox(10, controlLayout, taskListView);
-
+        
+        // Adds padding around the task list and the entire layout.
         VBox.setMargin(taskListView, new Insets(10, 0, 0, 0));
         root.setPadding(new Insets(10));
-
+        
+        // Set the dimension of root layout
         Scene scene = new Scene(root, 600, 400);
+        // Set the scene on the primary stage and displays it.
         primaryStage.setScene(scene);
         primaryStage.show();
         // Load tasks when the application starts
