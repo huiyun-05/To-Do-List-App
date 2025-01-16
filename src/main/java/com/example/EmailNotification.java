@@ -74,7 +74,7 @@ public class EmailNotification {
         // User input: configure the email address and task details
         String receiverEmail = "recipientemail@example.com";  // Receiver's email
         String taskName = "Finish Assignment";
-        String dueDate = "2025-01-02 10:00";  // Task due date (example)
+        String dueDate = "2025-01-17 10:00";  // Task due date (example)
 
         // Check if the task is due within 24 hours
         checkTaskDueDate(receiverEmail, taskName, dueDate);

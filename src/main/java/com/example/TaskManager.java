@@ -444,7 +444,7 @@ public class TaskManager {
         );
     }
     
-
+    //Automatically generate tasks based on their recurrence pattern
     public static void generateRecurringTasks() {
         LocalDate today = LocalDate.now();
 
