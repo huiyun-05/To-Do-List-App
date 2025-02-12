@@ -266,7 +266,6 @@ public class StorageSystem {
     
     public static void addTask(GeneralTask task) {
         tasks.add(task);
-        System.out.println("Task added to storage.");
     }
     
     // Conversion from StorageTask to GeneralTask
@@ -363,9 +362,6 @@ public class StorageSystem {
         );
         tasks.add(generalTask);
     }
-
-    // Debugging print statement
-    System.out.println("Loaded tasks: " + tasks.size());
 }
 
     // Save tasks to CSV file

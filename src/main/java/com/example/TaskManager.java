@@ -78,7 +78,7 @@ public class TaskManager {
     }
 
     public static void addTask() {
-        System.out.println("\n=== Add a New Task ===");
+        System.out.println("=== Add a New Task ===");
         // Title input
         String title = "";
         while (title.isEmpty()) {
@@ -152,7 +152,7 @@ public class TaskManager {
     }
 
     private static void markTaskComplete() {
-        System.out.println("\n=== Mark Task as Complete ===");
+        System.out.println("=== Mark Task as Complete ===");
         System.out.print("Enter the task number you want to mark as complete: ");
         int taskId = scanner.nextInt();
         System.out.println();
@@ -190,7 +190,7 @@ public class TaskManager {
     }
 
     private static void deleteTask() {
-        System.out.println("\n=== Delete a Task ===");
+        System.out.println("=== Delete a Task ===");
         System.out.print("Enter the task number you want to delete:");
         int taskId = scanner.nextInt();
         
@@ -231,13 +231,13 @@ public class TaskManager {
     }
     
     private static void sortTasks() {
-        System.out.println("\n=== Sort Tasks ===");
+        System.out.println("=== Sort Tasks ===");
         System.out.println("Sort by:");
         System.out.println("1. Due Date (Ascending)");
         System.out.println("2. Due Date (Descending)");
         System.out.println("3. Priority (High to Low)");
         System.out.println("4. Priority (Low to High)");
-        
+        System.out.print("\n> ");
         int choice;
         try {
             choice = scanner.nextInt();
@@ -305,7 +305,6 @@ public class TaskManager {
         System.out.println("=== Search Tasks ===");
         System.out.print("Enter a keyword to search by title or description: ");
         String keyword = scanner.nextLine().trim().toLowerCase();
-        System.out.print("> ");
         if (keyword.isEmpty()) {
             System.out.println("Keyword cannot be empty. Please try again.");
             return;
@@ -317,8 +316,8 @@ public class TaskManager {
         System.out.println("\n=== Search Results ===");
         boolean found = false;
 
-        for (int i = 0; i < tasks.size(); i++) {
-            GeneralTask task = tasks.get(i);
+        for (int i = 0; i < StorageSystem.tasks.size(); i++) {
+            GeneralTask task = StorageSystem.tasks.get(i);
             String title = task.getTitle() != null ? task.getTitle().toLowerCase() : "";
             String description = task.getDescription() != null ? task.getDescription().toLowerCase() : "";
 
@@ -472,7 +471,7 @@ public class TaskManager {
         // Load tasks from CSV before setting the dependency
         StorageSystem.loadTasksFromCSV();
 
-        System.out.println("\n=== Set Task Dependency ===");
+        System.out.println("=== Set Task Dependency ===");
         System.out.print("Enter task number that depends on another task: ");
         int dependentTask = scanner.nextInt();
         System.out.print("Enter the task number it depends on: ");
@@ -567,17 +566,17 @@ public class TaskManager {
         // Load tasks from CSV before editing
         loadTasksFromCSV();
 
-        System.out.println("\n=== Edit Task ===");
+        System.out.println("=== Edit Task ===");
         System.out.print("Enter the task number you want to edit: ");
         int taskNumber = scanner.nextInt();
         scanner.nextLine(); // Consume newline
 
-        if (taskNumber <= 0 || taskNumber > tasks.size()) {
+        if (taskNumber <= 0 || taskNumber > StorageSystem.tasks.size()) {
             System.out.println("Invalid task number.");
             return;
         }
 
-        GeneralTask task = tasks.get(taskNumber - 1);
+        GeneralTask task = StorageSystem.tasks.get(taskNumber - 1);
         StorageTask storageTask = storageTasks.get(taskNumber - 1);  // Get the corresponding StorageTask
 
         System.out.println("\nWhat would you like to edit?");
@@ -597,18 +596,51 @@ public class TaskManager {
             case 1:
                 System.out.print("Enter the new title: ");
                 temp = task.getTitle();
-                task.setTitle(scanner.nextLine());
-                storageTask.setTitle(task.getTitle());  // Update the corresponding StorageTask
+                String newTitle = scanner.nextLine();
+                task.setTitle(newTitle);
+                storageTask.setTitle(newTitle);  // Update the corresponding StorageTask
+                // If the task is recurring, update all instances with the same recurrence pattern
+                if (!task.getRecurrence().isEmpty()) {
+                    for (GeneralTask t : StorageSystem.tasks) {
+                        if (t.getRecurrence().equals(task.getRecurrence()) && t.getTitle().equals(temp)) {
+                            t.setTitle(newTitle);
+                        }
+                    }
+                    for (StorageTask st : StorageSystem.storageTasks) {
+                        if (st.getRecurrence().equals(storageTask.getRecurrence()) && st.getTitle().equals(temp)) {
+                            st.setTitle(newTitle);
+                        }
+                    }
+                }
                 System.out.println("\nTask \"" + temp + "\" has been updated to \"" + task.getTitle() + ".\"");
                 break;
             case 2:
                 System.out.print("Enter the new description: ");
                 temp = task.getDescription();
-                task.setDescription(scanner.nextLine());
-                storageTask.setDescription(task.getDescription());  // Update the corresponding StorageTask
+                String newDescription = scanner.nextLine();
+                task.setDescription(newDescription);
+                storageTask.setDescription(newDescription);  // Update the corresponding StorageTask
+
+                // If the task is recurring, update all instances with the same recurrence pattern
+                if (!task.getRecurrence().isEmpty()) {
+                    for (GeneralTask t : StorageSystem.tasks) {
+                        if (t.getRecurrence().equals(task.getRecurrence()) && t.getDescription().equals(temp)) {
+                            t.setDescription(newDescription);
+                        }
+                    }
+                    for (StorageTask st : StorageSystem.storageTasks) {
+                        if (st.getRecurrence().equals(storageTask.getRecurrence()) && st.getDescription().equals(temp)) {
+                            st.setDescription(newDescription);
+                        }
+                    }
+                }
                 System.out.println("\nTask \"" + temp + "\" has been updated to \"" + task.getDescription()+ ".\"");
                 break;
             case 3:
+                if (!task.getRecurrence().isEmpty()) {
+                    System.out.println("This is a recurring task. Only the title and description can be edited.");
+                    break;
+                }
                 System.out.print("Enter the new due date (YYYY-MM-DD): ");
                 String newDueDate = scanner.nextLine();
                 if (isValidDate(newDueDate)) {
@@ -623,6 +655,10 @@ public class TaskManager {
                 }
                 break;
             case 4:
+                if (!task.getRecurrence().isEmpty()) {
+                    System.out.println("This is a recurring task. Only the title and description can be edited.");
+                    break;
+                }
                 System.out.print("Enter the new category: ");
                 temp = task.getCategory();
                 task.setCategory(scanner.nextLine());
@@ -630,6 +666,10 @@ public class TaskManager {
                 System.out.println("\nTask \"" + temp + "\" has been updated to \"" + task.getCategory()+ ".\"");
                 break;
             case 5:
+                if (!task.getRecurrence().isEmpty()) {
+                    System.out.println("This is a recurring task. Only the title and description can be edited.");
+                    break;
+                }
                 System.out.print("Enter the new priority (e.g., High, Medium, Low): ");
                 temp = task.getPriority();
                 String newPriority = scanner.nextLine();
@@ -643,6 +683,10 @@ public class TaskManager {
                 }
                 break;
             case 6:
+                if (!task.getRecurrence().isEmpty()) {
+                    System.out.println("This is a recurring task. Only the title and description can be edited.");
+                    break;
+                }
                 System.out.println("Set Task Dependency:");
                 setTaskDependency();
                 break;
@@ -657,7 +701,6 @@ public class TaskManager {
         // Save the updated tasks list to the CSV file
         saveTasksToCSV();
 
-        System.out.println("\nUpdated task list:");
         viewAllTasks();
     }
 
@@ -686,16 +729,16 @@ public class TaskManager {
             return;
         }
 
-        System.out.println("\n=== View All Tasks ===");
+        System.out.println("=== View All Tasks ===");
         for (int i = 0; i < StorageSystem.storageTasks.size(); i++) {
             StorageTask task = StorageSystem.storageTasks.get(i);
             String taskStatus = task.getIsComplete().equalsIgnoreCase("complete") ? "[Complete]" : "[Incomplete]";
             String taskLabel = "Task " + (char) ('A' + i); // Convert index to Task A, Task B, etc.
 
             // Base task details without dependency information
-            String taskInfo = String.format("%d. %s %s: %s - Due: %s - Priority: %s - Category: %s",
-                    i + 1, taskStatus, taskLabel, task.getTitle(), task.getDueDate(),
-                    task.getPriority(), task.getCategory());
+            String taskInfo = String.format("%d. %s %s: %s - Due: %s ",
+                    i + 1, taskStatus, taskLabel, task.getTitle(), task.getDueDate()
+                    );
 
             // Handle dependencies if they exist (task.getDependencies() should be a List<Integer>)
         List<Integer> dependencies = task.getDependencies(); // List<Integer> directly

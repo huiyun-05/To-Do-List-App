@@ -159,19 +159,6 @@ public class GeneralTask {
     public void setNextCreationDate(LocalDate nextCreationDate) {
         this.nextCreationDate = nextCreationDate;
     }
-    
-    public LocalDate getNextDueDate() {
-        switch (recurrence) {
-            case "daily":
-                return nextCreationDate.plusDays(1);
-            case "weekly":
-                return nextCreationDate.plusWeeks(1);
-            case "monthly":
-                return nextCreationDate.plusMonths(1);
-            default:
-                return nextCreationDate;
-        }
-    }
 
     public void addDependency(int taskId) {
         dependencies.add(taskId);
