@@ -345,11 +345,12 @@ public class TaskManager {
         String title = scanner.nextLine();
         System.out.print("Enter task description: ");
         String description = scanner.nextLine();
-        System.out.print("Enter recurrence interval (daily, weekly, monthly): ");
-        String recurrence = scanner.nextLine().toLowerCase();
-        if (!recurrence.equals("daily") && !recurrence.equals("weekly") && !recurrence.equals("monthly")) {
+        String recurrence = "";
+        while(!recurrence.equals("daily") && !recurrence.equals("weekly") && !recurrence.equals("monthly")) {
+            System.out.print("Enter recurrence interval (daily, weekly, monthly): ");
+            recurrence = scanner.nextLine().toLowerCase();
+            if(!recurrence.equals("daily") && !recurrence.equals("weekly") && !recurrence.equals("monthly"))
             System.out.println("Invalid interval! Please enter 'daily', 'weekly', or 'monthly'.");
-            return;
         }
         
         // Load tasks from CSV before adding the new task
